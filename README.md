@@ -1,13 +1,29 @@
 # ASCII Aurora
 
-A theme for the Claude desktop app, built as a Claude Code mod, for both light
-and dark mode. An aurora borealis made entirely of ASCII characters sways
-behind the conversation, over ASCII mountains and a pine forest: under a
-starry night sky in dark mode, and a daytime aurora sky in light mode. Text and code take the aurora's
-colours, and an optional ambient sound brings wind, high bells and low notes.
+A theme for the Claude desktop app, built as a Claude Code mod. An aurora
+borealis made entirely of ASCII characters sways behind the conversation, over
+ASCII mountains and a pine forest: under a starry night sky in dark mode, and
+a daytime aurora sky in light mode. Text, code and messages take the aurora's
+colours. Snow falls in the cold months, the pines are hung with lights at
+Christmas, and an optional ambient sound brings wind, high bells and low notes.
+
+![ASCII Aurora in dark mode](docs/images/dark.webp)
 
 Themes draw in the desktop and mobile apps only. The terminal and editors
 ignore them.
+
+## Gallery
+
+|   | Dark mode | Light mode |
+| --- | --- | --- |
+| **Every day** | ![Dark mode](docs/images/dark.webp) | ![Light mode](docs/images/light.webp) |
+| **Snow** | ![Dark mode with snow](docs/images/dark-snow.webp) | ![Light mode with snow](docs/images/light-snow.webp) |
+| **Christmas** | ![Dark mode at Christmas](docs/images/dark-christmas.webp) | ![Light mode at Christmas](docs/images/light-christmas.webp) |
+| **Snow and Christmas** | ![Dark mode with snow at Christmas](docs/images/dark-snow-christmas.webp) | ![Light mode with snow at Christmas](docs/images/light-snow-christmas.webp) |
+
+These are mock-ups, not screenshots of the app. The sky is the real backdrop,
+drawn by a WebGL copy of the shader and frozen at one moment. The conversation
+in front of it is drawn in the theme's own colours and message styles.
 
 ## Install
 
@@ -33,65 +49,125 @@ In the Claude desktop app, where `/plugin` doesn't run: click **+** next to
 the prompt box, then **Plugins**, **Add marketplace** with
 `iamkevinv/claude-theme-ascii-aurora`, then **Add plugin**.
 
-Once installed it loads in every new session, desktop app included.
+Once installed it loads in every new session, desktop app included. To update
+to the latest version:
 
-## What it does
+```bash
+claude plugin update ascii-aurora@claude-theme-ascii-aurora
+```
 
-- **Backdrop.** Three curtains of `. ' : ; ! | l I #` rays, each in its own
-  colour family: green and teal low, cyan and blue above, violet and
-  magenta highest. The sky is drawn once as a still picture, and a small
-  GPU shader brings it to life: it tells the curtains apart by colour and
-  slides each on its own clock (34, 43 and 57 seconds each way, the middle
-  one against the others), gliding smoothly by fractions of a pixel and
-  resampled sharply so the characters keep their edges.
-  The stars stay put and twinkle, the light breathes and shimmers, and a
-  band of light travels along the curtains. With reduced motion turned on,
-  or on the mobile app, the still sky shows.
-- **Snow.** In the cold months where you are, there's a 30% chance each
-  session that light pixel snow falls over the whole scene, in three depths.
-  The cold months are November to March in the Northern Hemisphere and May
-  to September in the Southern, and the hemisphere comes from your
-  computer's time zone, so no location is asked for (`hooks/season.js`).
-  Type `/ascii-aurora-snow` to let it snow anyway, or stop it, for the rest
-  of the session (`/ascii-aurora-snow on`, `/ascii-aurora-snow off`).
-- **Christmas.** On 24 and 25 December, by your computer's own calendar,
-  every pine is hung with coloured lights and a gold star, each bulb
-  glowing up and down on its own. They go up and come down around midnight.
-  Type `/ascii-aurora-christmas` to hang them on any day, or take them
-  down, for the rest of the session (`/ascii-aurora-christmas on`,
-  `/ascii-aurora-christmas off`).
-- **Colours.** Dark mode has near-black navy surfaces and icy mint text.
-  Light mode has pale periwinkle surfaces and deep indigo text, with a
-  daytime sky: periwinkle overhead, lightening to the horizon, and the
-  aurora laid on as added light, so it shows pale and bright in blue-green,
-  light blue and lilac. Either way, code uses the aurora's colours: teal
-  keywords, green strings, violet literals, magenta names, gold variables.
-- **Messages.** Your messages sit in an ASCII box (`+----+`) with green lines
-  and violet corners. Claude's replies sit on a plain panel, dark or light to
-  match the mode, with only the corners marked. All message text is
-  monospace.
-- **Sound.** Off until you press the speaker in the session's title bar.
-  - **Wind** has two modes. *Steady* is always there. *Gusty* comes in windy
-    and calm spells of random length, swelling and ebbing over 30 to 48
-    seconds, down to almost nothing between them.
-  - Switch with `/ascii-aurora-wind` (or `/ascii-aurora-wind gusty`,
-    `/ascii-aurora-wind steady`), or right-click an
-    empty part of the conversation and choose **Wind: make it gusty / steady**.
-    The choice is remembered.
+## Features
+
+### The sky
+
+- **Three aurora curtains** of `. ' : ; ! | l I #` rays, each in its own
+  colour family: green and teal low, cyan and blue above, violet and magenta
+  highest. Each has a soft glow beneath it.
+- **They move on the GPU.** The sky is drawn once as a still picture, and a
+  small shader brings it to life in the desktop app. It tells the curtains
+  apart by colour and slides each on its own clock: 34, 43 and 57 seconds each
+  way, with the middle one going against the others. Each glides smoothly by
+  fractions of a pixel and is resampled sharply, so the characters keep their
+  shape and edges.
+- **Light on the move.** Each curtain breathes on its own clock and shimmers
+  in patches, and a band of light travels along them every 30 seconds.
+- **Stars** stay put while the curtains move, each twinkling as a whole on
+  its own clock.
+- **Mountains and forest:** two ASCII ranges, with snow-lit peaks and a pine
+  forest along the near one. They stay still.
+- **Still where it should be.** With reduced motion turned on, or on the
+  mobile app, the still sky shows on its own.
+
+### Light and dark mode
+
+The theme follows your own light or dark setting.
+
+- **Dark mode** is a polar night: near-black navy surfaces, icy mint text, a
+  starry sky and dark green pines.
+- **Light mode** is a daytime aurora sky: pale periwinkle surfaces and deep
+  indigo text.
+  - The sky is periwinkle overhead, lightening to near white at the horizon,
+    with a bright glow low on one side.
+  - The aurora is laid on as added light, as daytime aurora is, so it shows
+    pale and bright in blue-green, light blue and lilac.
+  - There are no stars by day. The mountains turn slate with snow-white
+    ridges, and the pines a deep evergreen.
+
+### The conversation
+
+- **Your messages** sit in an ASCII box (`+----+`), with teal lines and
+  violet corners.
+- **Claude's replies** sit on a plain panel, dark or light to match the mode,
+  with only the corners marked.
+- **Headings** are aurora teal. **Tool calls** sit in teal-edged rows.
+- **Message text is monospace.**
+- **Code** uses the aurora's colours: teal keywords, green strings, violet
+  literals, magenta names and gold variables.
+- **Frosted panels:** the app's panels frost over the moving sky, so the words
+  stay easy to read.
+
+### Snow
+
+- In the cold months where you are, each session has a **30% chance** of
+  light pixel snow falling over the whole scene, in three depths. Further
+  flakes are smaller, slower and fainter.
+- While it snows, the **top third of every pine is white with snow**: bright
+  white by day, and a softer bluish white by night.
+- The cold months are November to March in the Northern Hemisphere and May to
+  September in the Southern. The hemisphere comes from your computer's time
+  zone, so no location is asked for (`hooks/season.js`).
+
+### Christmas
+
+- On **24 and 25 December**, by your computer's own calendar, every pine is
+  hung with coloured lights and a gold star. Each bulb glows up and down on
+  its own clock.
+- The lights go up and come down around midnight, with no reload needed.
+
+### Sound
+
+Off until you press the speaker in the session's title bar.
+
+- **Ambience:** wind over the snow, a high bell now and then like the sky
+  crackling, and a low note answering it.
+- **Cues:** soft chimes when you send a message, when Claude finishes, when
+  it asks you something, and when you click the sky.
+- **Wind** has two modes:
+  - *Steady* is always there.
+  - *Gusty* comes in windy and calm spells of random length, swelling and
+    ebbing over 30 to 48 seconds, down to almost nothing between them.
+
+  The wind choice is remembered across sessions.
+
+### Commands
+
+Each command is prefixed with the plugin's name, so none clashes with
+another plugin's.
+
+| Command | What it does |
+| --- | --- |
+| `/ascii-aurora-snow` | Lets it snow, or stops it, for the rest of the session, whatever the season. Add `on` or `off` to set it, or leave it off to switch. |
+| `/ascii-aurora-christmas` | Hangs the Christmas lights, or takes them down, for the rest of the session, whatever the date. Add `on` or `off`, or leave it off to switch. |
+| `/ascii-aurora-wind` | Switches the wind between steady and gusty. Add `steady` or `gusty` to pick one. |
+
+You can also switch the wind by right-clicking an empty part of the
+conversation and choosing **Wind: make it gusty / steady**.
 
 ## Files
 
 | File | What it holds |
 | --- | --- |
-| `.claude-plugin/plugin.json` | The mod's name and description |
+| `.claude-plugin/plugin.json` | The mod's name, version and description |
+| `.claude-plugin/marketplace.json` | Makes this repository a marketplace, so it installs with one line |
 | `hooks/hooks.json` | Points Claude Code at `register.tsx` |
-| `hooks/register.tsx` | Palette, message style, sound, wind modes, `/ascii-aurora-wind`, `/ascii-aurora-snow`, `/ascii-aurora-christmas`, the right-click item, and the backdrop hook |
-| `hooks/season.js` | Works out the cold months from the time zone and the month |
-| `hooks/scene.js` | Generates the still ASCII sky as one SVG (seeded, so it is the same every time) |
+| `hooks/register.tsx` | Palette for both modes, message styles, sound and wind modes, the three commands, the right-click item, the snow roll, the Christmas check, and the backdrop |
+| `hooks/scene.js` | Generates the still ASCII sky as one SVG, night and day, with the optional Christmas lights and snow caps. It's seeded, so the sky is the same every time |
 | `hooks/aurora-sky.ts` | The GPU shader that animates the sky in the desktop app. `claude plugin validate .` prints its cost |
-| `hooks/make-colors.js` | Turns a few colours into a full palette. Copied from Claude Code's plugin-authoring skill: don't edit it, copy it again when Claude Code updates |
-| `hooks/aurora.test.tsx` | Tests, run with `claude plugin test` |
-| `scripts/preview-scene.mjs` | Writes `preview/scene.svg` for tuning the sky in a browser |
+| `hooks/season.js` | Works out the cold months from the time zone and the month |
+| `hooks/make-colors.js` | Turns a few colours into a full palette. It's copied from Claude Code's plugin-authoring skill: don't edit it, and copy it again when Claude Code updates |
+| `hooks/*.test.ts(x)` | Tests, run with `claude plugin test` |
+| `scripts/preview-scene.mjs` | Writes `preview/scene.svg`, for tuning the sky in a browser |
+| `docs/images/` | The gallery above |
 | `.claude-plugin/types/` | API types Claude Code writes for editors and `tsc`. Generated, not committed |
 
 ## Working on it
@@ -115,8 +191,8 @@ clone's folder:
 claude --plugin-dir .
 ```
 
-Or install it from the clone, so Claude Code reads it straight from there
-and `/reload-plugins` picks up your edits:
+Or install it from the clone, so Claude Code reads it straight from there and
+`/reload-plugins` picks up your edits:
 
 ```bash
 claude plugin marketplace add .
@@ -126,6 +202,18 @@ claude plugin marketplace add .
 claude plugin install ascii-aurora@claude-theme-ascii-aurora
 ```
 
-`$.theme.set` rejects sound that is out of range or too long to render (each
-note's attack plus release is at most 4 seconds), so run the tests after
-changing the sound: they fail with the engine's reason.
+Things to know when changing it:
+
+- **Sound.** `$.theme.set` rejects sound that is out of range or too long to
+  render: each note's attack plus release can be at most 4 seconds. Run the
+  tests after changing the sound; they fail with the engine's reason.
+- **Curtain colours.** Each curtain keeps to its own range of hues (main 115°
+  to 178°, ribbon 182° to 238°, veil 242° to 345°), so the shader can tell
+  them apart. A colour outside its range makes that curtain's characters move
+  with another's.
+- **Under the ridge,** the shader takes anything bright and strongly coloured
+  for a Christmas bulb and twinkles it. Keep the ground, mountains and pines
+  muted.
+- **Experiments.** Earlier shader approaches are kept as tags:
+  `experiment/shader-warping` (a wavy ripple that bent the characters) and
+  `experiment/shader-rolling` (a lean that rippled like a rolling shutter).
