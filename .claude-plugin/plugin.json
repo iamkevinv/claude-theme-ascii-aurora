@@ -1,5 +1,5 @@
 {
   "name": "ascii-aurora",
   "version": "0.3.0",
-  "description": "A dark theme: an ASCII aurora borealis over ASCII mountains, with aurora-coloured text and code."
+  "description": "An ASCII aurora borealis over ASCII mountains, by night in dark mode and by day in light mode, with aurora-coloured text and code."
 }

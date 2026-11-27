@@ -298,6 +298,13 @@ function snow() {
 // plays no shader (mobile, Reduce Motion, a slow machine), this still sky
 // is what shows, so it is a finished scene on its own. No CSS comments go
 // in the style: the app's checks read their words too.
+// In light mode (the app's own, which the scene reads as
+// prefers-color-scheme) the sky turns to day: a periwinkle sky lightening
+// to the horizon, a bright glow low on one side, no stars, and the aurora
+// laid on as added light (plus-lighter), as daytime aurora is, so it shows
+// pale and bright: blue-green, light blue and lilac. The added colours keep
+// each curtain's family of hues, so the shader tells them apart in either
+// mode. The mountains turn to slate with snow-lit ridges and navy pines.
 const STYLE = `
 text { font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "DejaVu Sans Mono", monospace; font-size: ${FONT_SIZE}px; white-space: pre; }
 .aurora { font-weight: 700; }
@@ -312,6 +319,27 @@ text { font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "DejaVu Sa
 .trees { fill: #255446; }
 .bulbs { font-weight: 700; }
 .snow { fill: #1a2d33; }
+.sky { fill: url(#sky); }
+.farGround { fill: #050b12; }
+.nearGround { fill: #02060a; }
+.day { display: none; }
+@media (prefers-color-scheme: light) {
+  .sky { fill: url(#skyDay); }
+  .night, .stars { display: none; }
+  .day { display: inline; }
+  .aurora { mix-blend-mode: plus-lighter; }
+  .main { fill: url(#mainDay); }
+  .high { opacity: 0.85; fill: url(#highDay); }
+  .veil { opacity: 0.85; fill: url(#veilDay); }
+  .hem { mix-blend-mode: plus-lighter; opacity: 0.12; }
+  .farGround { fill: #63679b; }
+  .nearGround { fill: #4a4e7a; }
+  .far { fill: #dfe5f7; }
+  .peaks { fill: #ffffff; }
+  .near { fill: #c9cfee; }
+  .trees { fill: #232a52; }
+  .snow { fill: #aab1dc; }
+}
 `
 
 export function auroraScene({ festive = false } = {}) {
@@ -348,6 +376,26 @@ export function auroraScene({ festive = false } = {}) {
     '<stop offset="0" stop-color="#ff6fb4"/><stop offset="0.5" stop-color="#e07cff"/>',
     '<stop offset="1" stop-color="#b886ff"/>',
     '</linearGradient>',
+    // Day: the sky, from periwinkle overhead to near white at the horizon,
+    // and each curtain's colour as light added to it. The added colours
+    // keep within each curtain's hues as above: main 125 to 153 degrees,
+    // ribbon 198 to 223, veil 310 to 328.
+    '<linearGradient id="skyDay" x1="0" y1="0" x2="0" y2="1">',
+    '<stop offset="0" stop-color="#5b5fab"/><stop offset="0.4" stop-color="#7175bd"/>',
+    '<stop offset="0.7" stop-color="#9096cf"/><stop offset="0.9" stop-color="#b6bde3"/><stop offset="1" stop-color="#d3daf0"/>',
+    '</linearGradient>',
+    '<radialGradient id="sunGlow" cx="0.92" cy="0.8" r="0.55">',
+    '<stop offset="0" stop-color="#eef3fb" stop-opacity="0.6"/><stop offset="1" stop-color="#eef3fb" stop-opacity="0"/>',
+    '</radialGradient>',
+    `<linearGradient id="mainDay" gradientUnits="userSpaceOnUse" x1="0" y1="130" x2="0" y2="540">`,
+    '<stop offset="0" stop-color="#12593b"/><stop offset="0.55" stop-color="#1f8040"/><stop offset="1" stop-color="#2a9933"/>',
+    '</linearGradient>',
+    `<linearGradient id="highDay" gradientUnits="userSpaceOnUse" x1="0" y1="90" x2="0" y2="330">`,
+    '<stop offset="0" stop-color="#1a2e5c"/><stop offset="1" stop-color="#0f3d52"/>',
+    '</linearGradient>',
+    `<linearGradient id="veilDay" gradientUnits="userSpaceOnUse" x1="0" y1="40" x2="0" y2="190">`,
+    '<stop offset="0" stop-color="#6a1040"/><stop offset="1" stop-color="#5a1250"/>',
+    '</linearGradient>',
     '<radialGradient id="glowGreen" cx="0.55" cy="0.42" r="0.5">',
     '<stop offset="0" stop-color="#1fb383" stop-opacity="0.2"/><stop offset="1" stop-color="#1fb383" stop-opacity="0"/>',
     '</radialGradient>',
@@ -356,14 +404,15 @@ export function auroraScene({ festive = false } = {}) {
     '</radialGradient>',
     '<filter id="soft" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="28"/></filter>',
     '</defs>',
-    '<!-- night sky and the glow the aurora casts -->',
-    `<rect width="${W}" height="${H}" fill="url(#sky)"/>`,
-    `<rect width="${W}" height="${H}" fill="url(#glowViolet)"/>`,
-    `<rect width="${W}" height="${H}" fill="url(#glowGreen)"/>`,
-    `<path d="${hemPath(bands.main)}" fill="none" stroke="#2ee6a0" stroke-width="80" opacity="0.26" filter="url(#soft)"/>`,
-    `<path d="${hemPath(bands.high)}" fill="none" stroke="#7d6bff" stroke-width="50" opacity="0.14" filter="url(#soft)"/>`,
-    '<!-- stars -->',
-    `<g>${stars()}</g>`,
+    '<!-- the sky, night or day, and the glow the aurora casts -->',
+    `<rect class="sky" width="${W}" height="${H}"/>`,
+    `<rect class="night" width="${W}" height="${H}" fill="url(#glowViolet)"/>`,
+    `<rect class="night" width="${W}" height="${H}" fill="url(#glowGreen)"/>`,
+    `<rect class="day" width="${W}" height="${H}" fill="url(#sunGlow)"/>`,
+    `<path class="hem" d="${hemPath(bands.main)}" fill="none" stroke="#2ee6a0" stroke-width="80" opacity="0.26" filter="url(#soft)"/>`,
+    `<path class="hem" d="${hemPath(bands.high)}" fill="none" stroke="#7d6bff" stroke-width="50" opacity="0.14" filter="url(#soft)"/>`,
+    '<!-- stars, at night -->',
+    `<g class="stars">${stars()}</g>`,
     '<!-- the curtains -->',
     // Each curtain twice, the second dithered differently and fainter, for
     // the density of light the original moving sky had at its fullest.
@@ -371,10 +420,10 @@ export function auroraScene({ festive = false } = {}) {
     `<g class="high aurora">${rows(high)}<g class="alt">${rows(highAlt)}</g></g>`,
     `<g class="main aurora">${rows(main)}<g class="alt">${rows(mainAlt)}</g></g>`,
     '<!-- far range, near range, forest and snow -->',
-    `<path d="${ridgeFill(far)}" fill="#050b12"/>`,
+    `<path class="farGround" d="${ridgeFill(far)}"/>`,
     `<g class="far">${rows(ridgeGrid(far, 0, 5))}</g>`,
     `<g class="peaks">${rows(ridgeGrid(far, 6))}</g>`,
-    `<path d="${ridgeFill(near)}" fill="#02060a"/>`,
+    `<path class="nearGround" d="${ridgeFill(near)}"/>`,
     `<g class="near">${rows(ridgeGrid(near))}</g>`,
     `<g class="trees">${rows(pines.grid)}</g>`,
     `<g class="bulbs">${pines.lights}</g>`,
