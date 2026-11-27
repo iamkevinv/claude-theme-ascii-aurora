@@ -194,10 +194,11 @@ const BASE: ThemeSetArgs = {
   backdrop: { scene: SCENE, glass: { blur: 10, tint: '#060b13', opacity: 0.7 } },
 }
 
-// A fade between spells: this many steps, this far apart. The app also
+// A fade between spells: this many steps, this far apart, so 30 to 48
+// seconds of slow swell or ebb, eased at both ends. The app also
 // cross-fades each change of sound, which smooths the steps.
-const FADE_STEPS: readonly [number, number] = [4, 7]
-const FADE_STEP_MS = 2500
+const FADE_STEPS: readonly [number, number] = [10, 16]
+const FADE_STEP_MS = 3000
 // How long each kind of spell lasts, in seconds.
 const WINDY_SPELL: readonly [number, number] = [20, 90]
 const CALM_SPELL: readonly [number, number] = [15, 75]

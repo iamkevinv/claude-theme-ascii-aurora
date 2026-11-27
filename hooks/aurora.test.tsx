@@ -90,9 +90,10 @@ test('gusty wind fades between windy and almost-still spells', async ($, on) => 
   const levels = sets.map(windOf)
   expect(Math.max(...levels)).toBeGreaterThan(0.1)
   expect(Math.min(...levels)).toBeLessThan(0.01)
-  // Each change is a fade of several small steps, never a jump to silence.
+  // Each change is a slow fade of many small steps, never a jump: no step
+  // moves the wind by more than a quarter of its full strength.
   for (let i = 1; i < levels.length; i++) {
-    expect(Math.abs(levels[i]! - levels[i - 1]!)).toBeLessThan(0.1)
+    expect(Math.abs(levels[i]! - levels[i - 1]!)).toBeLessThan(0.04)
   }
 })
 

@@ -48,8 +48,8 @@ Once installed it loads in every new session, desktop app included.
   corners marked. All message text is monospace.
 - **Sound.** Off until you press the speaker in the session's title bar.
   - **Wind** has two modes. *Steady* is always there. *Gusty* comes in windy
-    and calm spells of random length, fading softly to almost nothing between
-    them.
+    and calm spells of random length, swelling and ebbing over 30 to 48
+    seconds, down to almost nothing between them.
   - Switch with `/wind` (or `/wind gusty`, `/wind steady`), or right-click an
     empty part of the conversation and choose **Wind: make it gusty / steady**.
     The choice is remembered.
