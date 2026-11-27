@@ -27,10 +27,6 @@ in front of it is drawn in the theme's own colours and message styles.
 
 ## Install
 
-This repository is private: you need to have been invited to it on GitHub,
-and your computer needs a git login for github.com (an SSH key, or
-`gh auth login` then `gh auth setup-git`). The install never asks for one.
-
 At the prompt of a Claude Code terminal session:
 
 ```
@@ -172,18 +168,19 @@ conversation and choosing **Wind: make it gusty / steady**.
 
 | File | What it holds |
 | --- | --- |
-| `.claude-plugin/plugin.json` | The mod's name, version and description |
+| `.claude-plugin/plugin.json` | The mod's name, version, description, author and licence |
 | `.claude-plugin/marketplace.json` | Makes this repository a marketplace, so it installs with one line |
 | `hooks/hooks.json` | Points Claude Code at `register.tsx` |
 | `hooks/register.tsx` | Palette for both modes, message styles, sound and wind modes, the three commands, the right-click item, the snow roll, the Christmas check, and the backdrop |
 | `hooks/scene.js` | Generates the still ASCII sky as one SVG, night and day, with the optional Christmas lights and snow caps. It's seeded, so the sky is the same every time |
 | `hooks/aurora-sky.ts` | The GPU shader that animates the sky in the desktop app. `claude plugin validate .` prints its cost |
 | `hooks/season.js` | Works out the cold months from the time zone and the month |
-| `hooks/make-colors.js` | Turns a few colours into a full palette. It's copied from Claude Code's plugin-authoring skill: don't edit it, and copy it again when Claude Code updates |
+| `hooks/make-colors.js` | Turns a few colours into a full palette. It's copied from Claude Code's plugin-authoring skill, with `make-colors.d.ts`: don't edit them, and copy them again when Claude Code updates. They aren't covered by this repository's licence |
 | `hooks/*.test.ts(x)` | Tests, run with `claude plugin test` |
 | `scripts/preview-scene.mjs` | Writes `preview/scene.svg`, for tuning the sky in a browser |
 | `docs/images/` | The gallery above |
 | `.claude-plugin/types/` | API types Claude Code writes for editors and `tsc`. Generated, not committed |
+| `LICENSE` | The licence: CC BY-NC-SA 4.0 |
 
 ## Working on it
 
@@ -263,3 +260,32 @@ Things to know when changing it:
   ```
 
   </details>
+
+## Contributing
+
+Issues and pull requests are welcome. Only the repository's owner can push to
+it, so changes come in as pull requests from a fork, and each one is reviewed
+before it's merged.
+
+1. Fork the repository and make a branch for your change.
+2. Try the change in the desktop app from your fork's folder, as
+   [Working on it](#working-on-it) describes, in both light and dark mode.
+3. Run `claude plugin validate .` and `claude plugin test .`. Both should
+   pass.
+4. Open a pull request that says what you changed and why. If it changes how
+   the theme looks, add a screenshot.
+
+By opening a pull request, you agree that your contribution is licensed under
+the same licence as the rest of the project.
+
+## Licence
+
+ASCII Aurora Theme © 2026 Kevin Vanderbeken is licensed under
+[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). You're
+free to share and adapt it for non-commercial purposes, as long as you give
+credit and share your changes under the same licence. The full text is in
+[LICENSE](LICENSE).
+
+`hooks/make-colors.js` and `hooks/make-colors.d.ts` are copied from Claude
+Code's plugin-authoring skill, by Anthropic, and aren't covered by this
+licence.
