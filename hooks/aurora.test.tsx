@@ -279,3 +279,18 @@ test('/ascii-aurora-christmas off takes the lights down on Christmas Day too', a
   expect(await hasLights(ui)).toBe(false)
   await ui.unmount()
 })
+
+test('while it snows, the tops of the pines are white with snow', async ($, on) => {
+  world(on)
+  await $.session.start(START)
+  const snow = (args: string) =>
+    ({ command: 'ascii-aurora-snow', args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 80 } }) as const
+  const ui = await $.ui.mount({ ...BACKDROP, surface: 'desktop' })
+  const capped = async () => String((await ui.find({ type: 'Svg' }))?.props.source ?? '').includes('<g class="snowcaps"><text')
+
+  await $.command.run(snow('on'))
+  expect(await capped()).toBe(true)
+  await $.command.run(snow('off'))
+  expect(await capped()).toBe(false)
+  await ui.unmount()
+})
