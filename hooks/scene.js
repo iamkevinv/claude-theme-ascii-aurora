@@ -140,22 +140,33 @@ function drawCurtain(band, dither, seedShift = 0) {
 
 // --- Stars ------------------------------------------------------------
 
+// Stars sit one to a cell of STAR_CELL units, centred well inside it, so
+// the shader (aurora-sky.ts, which uses the same size) can twinkle each
+// whole star on its own clock by the cell it is in.
+const STAR_CELL = 32
+
 function stars() {
   const random = mulberry32(4242)
   const glyphs = ['.', '.', '.', '.', '.', "'", '`', '+', '+', '*']
   const tints = ['#dbe9ff', '#c4defc', '#efe6ff', '#cdfbee', '#fff6e0']
   let out = ''
-  for (let i = 0; i < 190; i++) {
-    const x = +(random() * W).toFixed(1)
-    // Denser high in the sky, thinning toward the ridge.
-    const y = +(6 + Math.pow(random(), 1.35) * 640).toFixed(1)
-    const glyph = glyphs[Math.floor(random() * glyphs.length)]
-    const tint = tints[Math.floor(random() * tints.length)]
-    const size = glyph === '*' || glyph === '+' ? 9 + random() * 4 : 11 + random() * 6
-    const kind = random()
-    const twinkle = kind < 0.62 ? ` class="tw t${1 + Math.floor(random() * 4)}"` : ''
-    const opacity = kind < 0.62 ? '' : ` opacity="${(0.25 + random() * 0.45).toFixed(2)}"`
-    out += `<text x="${x}" y="${y}" font-size="${size.toFixed(1)}" fill="${tint}"${twinkle}${opacity}>${glyph}</text>`
+  // Stars stop short of the ridge, so the tallest peaks are never taken
+  // for stars.
+  for (let row = 0; row * STAR_CELL < 540; row++) {
+    for (let col = 0; col * STAR_CELL < W; col++) {
+      // Denser high in the sky, thinning toward the ridge.
+      const top = row * STAR_CELL
+      if (random() > 0.34 * Math.pow(1 - top / 700, 0.9)) continue
+      const x = +(col * STAR_CELL + 11 + random() * 10).toFixed(1)
+      const y = +(top + 11 + random() * 10).toFixed(1)
+      const glyph = glyphs[Math.floor(random() * glyphs.length)]
+      const tint = tints[Math.floor(random() * tints.length)]
+      const size = glyph === '*' || glyph === '+' ? 9 + random() * 4 : 11 + random() * 6
+      const kind = random()
+      const twinkle = kind < 0.62 ? ' class="tw"' : ''
+      const opacity = kind < 0.62 ? '' : ` opacity="${(0.25 + random() * 0.45).toFixed(2)}"`
+      out += `<text x="${x}" y="${y}" font-size="${size.toFixed(1)}" fill="${tint}" text-anchor="middle" dominant-baseline="central"${twinkle}${opacity}>${glyph}</text>`
+    }
   }
   return out
 }
