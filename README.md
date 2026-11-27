@@ -41,7 +41,8 @@ Once installed it loads in every new session, desktop app included.
   magenta highest. The sky is drawn once as a still picture, and a small
   GPU shader brings it to life: it tells the curtains apart by colour and
   slides each on its own clock (34, 43 and 57 seconds each way, the middle
-  one against the others), in whole pixels so the characters stay sharp.
+  one against the others), gliding smoothly by fractions of a pixel and
+  resampled sharply so the characters keep their edges.
   The stars stay put and twinkle, the light breathes and shimmers, and a
   band of light travels along the curtains. With reduced motion turned on,
   or on the mobile app, the still sky shows.

@@ -6,8 +6,8 @@
 // family of hues) and slides back and forth on its own clock, as the
 // original CSS sky's did: the green main curtain over 34 seconds, the
 // cyan ribbon above it the other way over 43, the violet veil over 57.
-// Each slides by whole pixels, all its characters at once, so they keep
-// their shape and stay sharp. The stars stay put. On top of that only
+// Each glides smoothly by fractions of a pixel, all its characters at
+// once, resampled sharply so they keep their shape and edges. The stars stay put. On top of that only
 // brightness changes: a soft band of light crosses the curtains, each
 // breathes and shimmers in patches, and the stars twinkle. Everything is
 // slow (no spot changes more than once every few seconds), far under the
@@ -30,6 +30,7 @@ import {
   mod,
   picture,
   px,
+  res,
   scene,
   shader,
   sin,
@@ -121,25 +122,39 @@ function starness(light: vec3): number {
   return smoothstep(0.01, 0.04, brightest(light)) * (1 - smoothstep(0.25, 0.45, colourful(light)))
 }
 
-// Where a curtain's light at `uv` comes from once the curtain has slid
-// `points`: past a side edge of the window the sky is mirrored, so the
-// curtain carries on into the edge with no seam (its ray characters read
-// the same either way).
-function source(uv: vec2, points: number): vec2 {
-  return vec2(1 - abs(1 - abs(uv.x - points / size.x)), uv.y)
+// Past a side edge of the window the sky is mirrored, so a curtain carries
+// on into the edge with no seam (its ray characters read the same either
+// way).
+function mirror(across: number): number {
+  return 1 - abs(1 - abs(across))
 }
 
-// A curtain's light at `uv`, slid `points` (whole pixels), picked out of
-// the sky by its hues.
-function curtain(uv: vec2, points: number, low: number, high: number): vec3 {
-  const from = source(uv, points)
-  const light = max(vec3(scene.sample(from).rgb) - vec3(ground.sample(from).rgb), vec3(0))
+// How much each of four neighbouring pixels in a row counts toward a point
+// `t` of the way between the middle two (Catmull-Rom). It keeps the edges
+// of characters sharp as they glide between pixels, where a plain blend of
+// two pixels would soften them.
+function weights(t: number): vec4 {
+  const t2 = t * t
+  const t3 = t2 * t
+  return vec4(-0.5 * t3 + t2 - 0.5 * t, 1.5 * t3 - 2.5 * t2 + 1, -1.5 * t3 + 2 * t2 + 0.5 * t, 0.5 * t3 - 0.5 * t2)
+}
+
+// A curtain's light at `uv` once it has slid `shift` pixels, smoothly, by
+// any fraction of a pixel, picked out of the sky by its hues. Every pixel
+// of a curtain slides by the same amount at the same moment, so nothing
+// ripples.
+function curtain(uv: vec2, shift: number, low: number, high: number): vec3 {
+  const from = uv.x * res.x - 0.5 - shift
+  const first = floor(from)
+  const w = weights(from - first)
+  const a = vec3(scene.sample(vec2(mirror((first - 0.5) / res.x), uv.y)).rgb)
+  const b = vec3(scene.sample(vec2(mirror((first + 0.5) / res.x), uv.y)).rgb)
+  const c = vec3(scene.sample(vec2(mirror((first + 1.5) / res.x), uv.y)).rgb)
+  const d = vec3(scene.sample(vec2(mirror((first + 2.5) / res.x), uv.y)).rgb)
+  const colour = vec3(a * w.x + b * w.y + c * w.z + d * w.w)
+  const behind = vec3(ground.sample(vec2(mirror((from + 0.5) / res.x), uv.y)).rgb)
+  const light = max(colour - behind, vec3(0))
   return vec3(light * belongs(light, low, high))
-}
-
-// A slide of `units` of scene.js's drawing, in whole pixels.
-function slide(units: number, scale: number): number {
-  return floor((units * scale) / px + 0.5) * px
 }
 
 // A curtain's breath and its shimmer: patches two characters by two rows
@@ -177,9 +192,10 @@ export default shader({
       const veilUnits = mix(-18, 22, swing(t, 57))
 
       // The three curtains, each picked out by its hues and slid on its own.
-      const main = curtain(uv, slide(mainUnits, scale), 115, 178)
-      const high = curtain(uv, slide(highUnits, scale), 182, 238)
-      const veil = curtain(uv, slide(veilUnits, scale), 242, 345)
+      // Each in pixels: units of the drawing, to points, to pixels.
+      const main = curtain(uv, (mainUnits * scale) / px, 115, 178)
+      const high = curtain(uv, (highUnits * scale) / px, 182, 238)
+      const veil = curtain(uv, (veilUnits * scale) / px, 242, 345)
 
       // A soft band of light crosses the curtains every 30 seconds.
       const along = fract(t / 30) * 1.8 - 0.4
