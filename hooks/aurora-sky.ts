@@ -54,20 +54,45 @@ function swing(t: number, seconds: number): number {
   return 0.5 - 0.5 * cos((PI * t) / seconds)
 }
 
-// What lies behind the characters at `at`: the darkest of the sky 7
-// points to either side and 16 above and below. A character is smaller
-// than that, so at least one of the four lands on plain sky, glow and all.
-function behind(at: vec2): vec3 {
-  const across = vec2(7 / size.x, 0)
-  const down = vec2(0, 16 / size.y)
-  const sides = min(vec3(scene.sample(at + across).rgb), vec3(scene.sample(at - across).rgb))
-  const ends = min(vec3(scene.sample(at + down).rgb), vec3(scene.sample(at - down).rgb))
-  return vec3(min(sides, ends))
-}
+// The sky with its characters taken out, made once (and again only when
+// the window changes size) in four passes. First the darkest sky within
+// 8 points every way, across and then down: a box that size always holds
+// a gap between characters, even in the densest curtain, so no trace of a
+// character or a star survives to be left behind when the curtains move.
+// Then the same box softened, so the sky behind them stays smooth. The
+// sky is smooth, so one texel a point is plenty, and gaps between
+// characters are wider than a point, so the box still finds them.
+const darkestAcross: Buffer = buffer({ once: true, scale: 1 }, p => {
+  let darkest = vec3(scene.sample(p.uv).rgb)
+  for (let step = -8; step <= 8; step += 1) {
+    darkest = min(darkest, vec3(scene.sample(p.uv + vec2(step / size.x, 0)).rgb))
+  }
+  return vec4(darkest, 1)
+})
 
-// The sky with its characters taken out. Made once, and again only when
-// the window changes size.
-const ground: Buffer = buffer({ once: true }, p => vec4(behind(p.uv), 1))
+const darkest: Buffer = buffer({ once: true, scale: 1 }, p => {
+  let deepest = vec3(darkestAcross.sample(p.uv).rgb)
+  for (let step = -8; step <= 8; step += 1) {
+    deepest = min(deepest, vec3(darkestAcross.sample(p.uv + vec2(0, step / size.y)).rgb))
+  }
+  return vec4(deepest, 1)
+})
+
+const softAcross: Buffer = buffer({ once: true, scale: 1 }, p => {
+  let sum = vec3(0)
+  for (let step = -3; step <= 3; step += 1) {
+    sum = vec3(sum + vec3(darkest.sample(p.uv + vec2((step * 2) / size.x, 0)).rgb))
+  }
+  return vec4(sum / 7, 1)
+})
+
+const ground: Buffer = buffer({ once: true, scale: 1 }, p => {
+  let sum = vec3(0)
+  for (let step = -3; step <= 3; step += 1) {
+    sum = vec3(sum + vec3(softAcross.sample(p.uv + vec2(0, (step * 2) / size.y)).rgb))
+  }
+  return vec4(sum / 7, 1)
+})
 
 // A bit of light's hue, in degrees round the colour wheel, and how
 // coloured (rather than white) and how bright it is.
@@ -130,6 +155,9 @@ function shimmer(t: number, x: number, y: number, salt: number): number {
 export default shader({
   fps: 30,
   passes: [
+    darkestAcross,
+    darkest,
+    softAcross,
     ground,
     picture(p => {
       const t = time * (1 - still)
