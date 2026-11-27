@@ -223,3 +223,44 @@ test('/ascii-aurora-snow lets it snow, or stops it, for the session', async ($, 
   expect(await snowing()).toBe(1)
   await ui.unmount()
 })
+
+// /ascii-aurora-christmas as the person types it.
+const christmasCommand = (args = '') =>
+  ({ command: 'ascii-aurora-christmas', args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 80 } }) as const
+
+test('/ascii-aurora-christmas hangs the lights on any day, and they stay up', async ($, on) => {
+  const clock = mock.clock(on, { now: new Date(2026, 6, 14, 10, 0).getTime() })
+  world(on)
+  await $.session.start(START)
+  const ui = await $.ui.mount({ ...BACKDROP, surface: 'desktop' })
+  expect(await hasLights(ui)).toBe(false)
+
+  expect((await $.command.run(christmasCommand('on'))).text).toContain('up for the rest')
+  expect(await hasLights(ui)).toBe(true)
+  // The calendar check every 10 minutes leaves the person's choice alone.
+  await clock.advance(30 * 60 * 1000)
+  expect(await hasLights(ui)).toBe(true)
+
+  expect((await $.command.run(christmasCommand('off'))).text).toContain('down for the rest')
+  expect(await hasLights(ui)).toBe(false)
+
+  await $.command.run(christmasCommand())
+  expect(await hasLights(ui)).toBe(true)
+
+  expect((await $.command.run(christmasCommand('tinsel'))).text).toContain('lights are up')
+  await ui.unmount()
+})
+
+test('/ascii-aurora-christmas off takes the lights down on Christmas Day too', async ($, on) => {
+  const clock = mock.clock(on, { now: new Date(2026, 11, 25, 8, 0).getTime() })
+  world(on)
+  await $.session.start(START)
+  const ui = await $.ui.mount({ ...BACKDROP, surface: 'desktop' })
+  expect(await hasLights(ui)).toBe(true)
+
+  await $.command.run(christmasCommand('off'))
+  expect(await hasLights(ui)).toBe(false)
+  await clock.advance(30 * 60 * 1000)
+  expect(await hasLights(ui)).toBe(false)
+  await ui.unmount()
+})

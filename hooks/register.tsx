@@ -306,14 +306,24 @@ function isChristmas(ms: number): boolean {
   return day.getMonth() === 11 && (day.getDate() === 24 || day.getDate() === 25)
 }
 
-const christmas = { on: false, timer: undefined as Timer | undefined }
+// `on` is the calendar's say; `override` is the person's, from
+// /ascii-aurora-christmas, and stands for the rest of the session.
+const christmas = {
+  on: false,
+  override: undefined as boolean | undefined,
+  timer: undefined as Timer | undefined,
+}
+
+// Whether the pines wear their lights right now.
+function lightsUp(): boolean {
+  return christmas.override ?? christmas.on
+}
 
 // Whether it snows this session: decided once, as the session starts. In
 // the cold months where the person is (by their computer's time zone, so
 // no location is asked for) there is a 30% chance; otherwise none.
 const season = { snowing: false }
 
-// Hangs the lights, or takes them down, when the day changes.
 // The time now, or undefined where there is no clock to ask, which then
 // means no Christmas lights and no snow, and never a theme left unset.
 async function now($: EngineInterface): Promise<number | undefined> {
@@ -324,12 +334,16 @@ async function now($: EngineInterface): Promise<number | undefined> {
   }
 }
 
+// Hangs the lights, or takes them down, when the day changes, unless the
+// person has said otherwise this session.
 async function checkChristmas($: EngineInterface) {
   const ms = await now($)
   const on = ms !== undefined && isChristmas(ms)
   if (on !== christmas.on) {
     christmas.on = on
-    $.ui.invalidate('ui.render')
+    if (christmas.override === undefined) {
+      $.ui.invalidate('ui.render')
+    }
   }
 }
 
@@ -358,6 +372,10 @@ export const register: Register = on => {
       name: 'ascii-aurora-snow',
       description: 'ASCII Aurora: let it snow, or stop it, for this session (on or off)',
     })
+    await $.command.register({
+      name: 'ascii-aurora-christmas',
+      description: 'ASCII Aurora: hang the Christmas lights, or take them down, for this session (on or off)',
+    })
 
     // Roll for snow before the sky is first drawn.
     const startedAt = await now($)
@@ -377,6 +395,7 @@ export const register: Register = on => {
     // Look at the calendar now, and every 10 minutes, so the lights go up
     // and come down around midnight.
     christmas.on = startedAt !== undefined && isChristmas(startedAt)
+    christmas.override = undefined
     christmas.timer?.cancel()
     try {
       christmas.timer = $.clock.every(10 * 60 * 1000, () => void checkChristmas($))
@@ -404,6 +423,26 @@ export const register: Register = on => {
         weather.mode === 'gusty'
           ? 'Wind is now gusty: it rises and dies away to almost nothing, in spells of random length.'
           : 'Wind is now steady.',
+    }
+  })
+
+  // Christmas lights on demand, for this session, whatever the date.
+  on('command.run', { command: 'ascii-aurora-christmas' }, ($, e) => {
+    const asked = e.args.trim().toLowerCase()
+
+    if (asked !== '' && asked !== 'on' && asked !== 'off') {
+      return {
+        text: `The Christmas lights are ${lightsUp() ? 'up' : 'down'}. Use /ascii-aurora-christmas on, /ascii-aurora-christmas off, or /ascii-aurora-christmas alone to switch.`,
+      }
+    }
+
+    christmas.override = asked === '' ? !lightsUp() : asked === 'on'
+    $.ui.invalidate('ui.render')
+
+    return {
+      text: christmas.override
+        ? 'The Christmas lights are up for the rest of this session.'
+        : 'The Christmas lights are down for the rest of this session.',
     }
   })
 
@@ -464,9 +503,9 @@ export const register: Register = on => {
     return (
       <Shader module="./aurora-sky.ts" values={{ snow: season.snowing ? 1 : 0 }}>
         <Svg
-          source={christmas.on ? FESTIVE_SKY : SKY}
+          source={lightsUp() ? FESTIVE_SKY : SKY}
           alt={
-            christmas.on
+            lightsUp()
               ? 'An ASCII-art aurora borealis over starlit ASCII mountains and pines hung with coloured Christmas lights'
               : 'An ASCII-art aurora borealis: green, teal and violet curtains of characters over starlit ASCII mountains and pines'
           }
