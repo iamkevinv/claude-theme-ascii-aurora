@@ -11,6 +11,7 @@ import type {
 
 import { makeColors } from './make-colors.js'
 import { auroraScene } from './scene.js'
+import { localTimeZone, shouldSnow } from './season.js'
 
 // ASCII aurora: a polar night. Surfaces are deep blue-black, text is icy mint,
 // and the five roles are the aurora's own colours, so code comes out in them:
@@ -99,7 +100,8 @@ const STYLE: ThemeStyle = {
 // now and then a high bell, like the sky crackling, and a low note
 // answering it.
 //
-// The wind has two modes, switched from the right-click menu or `/wind`:
+// The wind has two modes, switched from the right-click menu or
+// `/ascii-aurora-wind`:
 // steady, always there; or gusty, where it rises and dies away to almost
 // nothing, for windy and calm spells of random length.
 
@@ -306,9 +308,25 @@ function isChristmas(ms: number): boolean {
 
 const christmas = { on: false, timer: undefined as Timer | undefined }
 
+// Whether it snows this session: decided once, as the session starts. In
+// the cold months where the person is (by their computer's time zone, so
+// no location is asked for) there is a 30% chance; otherwise none.
+const season = { snowing: false }
+
 // Hangs the lights, or takes them down, when the day changes.
+// The time now, or undefined where there is no clock to ask, which then
+// means no Christmas lights and no snow, and never a theme left unset.
+async function now($: EngineInterface): Promise<number | undefined> {
+  try {
+    return await $.clock.now()
+  } catch {
+    return undefined
+  }
+}
+
 async function checkChristmas($: EngineInterface) {
-  const on = isChristmas(await $.clock.now())
+  const ms = await now($)
+  const on = ms !== undefined && isChristmas(ms)
   if (on !== christmas.on) {
     christmas.on = on
     $.ui.invalidate('ui.render')
@@ -333,9 +351,17 @@ export const register: Register = on => {
     }
 
     await $.command.register({
-      name: 'wind',
+      name: 'ascii-aurora-wind',
       description: 'ASCII Aurora sound: switch the wind between steady and gusty (or name one)',
     })
+    await $.command.register({
+      name: 'ascii-aurora-snow',
+      description: 'ASCII Aurora: let it snow, or stop it, for this session (on or off)',
+    })
+
+    // Roll for snow before the sky is first drawn.
+    const startedAt = await now($)
+    season.snowing = startedAt !== undefined && shouldSnow(localTimeZone(), new Date(startedAt).getMonth(), Math.random())
 
     const result = await setLook($)
 
@@ -350,18 +376,22 @@ export const register: Register = on => {
 
     // Look at the calendar now, and every 10 minutes, so the lights go up
     // and come down around midnight.
-    christmas.on = isChristmas(await $.clock.now())
+    christmas.on = startedAt !== undefined && isChristmas(startedAt)
     christmas.timer?.cancel()
-    christmas.timer = $.clock.every(10 * 60 * 1000, () => void checkChristmas($))
+    try {
+      christmas.timer = $.clock.every(10 * 60 * 1000, () => void checkChristmas($))
+    } catch {
+      // No clock: the lights stay as they are for this session.
+    }
 
     return next(e)
   })
 
-  on('command.run', { command: 'wind' }, async ($, e) => {
+  on('command.run', { command: 'ascii-aurora-wind' }, async ($, e) => {
     const asked = e.args.trim().toLowerCase()
 
     if (asked !== '' && !isWindMode(asked)) {
-      return { text: `Wind is ${weather.mode}. Use /wind steady, /wind gusty, or /wind alone to switch.` }
+      return { text: `Wind is ${weather.mode}. Use /ascii-aurora-wind steady, /ascii-aurora-wind gusty, or /ascii-aurora-wind alone to switch.` }
     }
     if (!weather.hasSound) {
       return { text: 'This version of the app does not take theme sound, so there is no wind to change.' }
@@ -374,6 +404,26 @@ export const register: Register = on => {
         weather.mode === 'gusty'
           ? 'Wind is now gusty: it rises and dies away to almost nothing, in spells of random length.'
           : 'Wind is now steady.',
+    }
+  })
+
+  // Snow on demand, for this session, whatever the season.
+  on('command.run', { command: 'ascii-aurora-snow' }, ($, e) => {
+    const asked = e.args.trim().toLowerCase()
+
+    if (asked !== '' && asked !== 'on' && asked !== 'off') {
+      return {
+        text: `It is ${season.snowing ? '' : 'not '}snowing. Use /ascii-aurora-snow on, /ascii-aurora-snow off, or /ascii-aurora-snow alone to switch.`,
+      }
+    }
+
+    season.snowing = asked === '' ? !season.snowing : asked === 'on'
+    $.ui.invalidate('ui.render')
+
+    return {
+      text: season.snowing
+        ? 'Snow is falling for the rest of this session.'
+        : 'The snow has stopped for the rest of this session.',
     }
   })
 
@@ -412,7 +462,7 @@ export const register: Register = on => {
     // The sky is a still picture, drawn once; the shader moves it on the
     // GPU. Where no shader plays, the still sky shows on its own.
     return (
-      <Shader module="./aurora-sky.ts">
+      <Shader module="./aurora-sky.ts" values={{ snow: season.snowing ? 1 : 0 }}>
         <Svg
           source={christmas.on ? FESTIVE_SKY : SKY}
           alt={

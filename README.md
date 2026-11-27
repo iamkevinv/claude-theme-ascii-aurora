@@ -46,6 +46,13 @@ Once installed it loads in every new session, desktop app included.
   The stars stay put and twinkle, the light breathes and shimmers, and a
   band of light travels along the curtains. With reduced motion turned on,
   or on the mobile app, the still sky shows.
+- **Snow.** In the cold months where you are, there's a 30% chance each
+  session that light pixel snow falls over the whole scene, in three depths.
+  The cold months are November to March in the Northern Hemisphere and May
+  to September in the Southern, and the hemisphere comes from your
+  computer's time zone, so no location is asked for (`hooks/season.js`).
+  Type `/ascii-aurora-snow` to let it snow anyway, or stop it, for the rest
+  of the session (`/ascii-aurora-snow on`, `/ascii-aurora-snow off`).
 - **Christmas.** On 24 and 25 December, by your computer's own calendar,
   every pine is hung with coloured lights and a gold star, each bulb
   glowing up and down on its own. They go up and come down around midnight.
@@ -59,7 +66,8 @@ Once installed it loads in every new session, desktop app included.
   - **Wind** has two modes. *Steady* is always there. *Gusty* comes in windy
     and calm spells of random length, swelling and ebbing over 30 to 48
     seconds, down to almost nothing between them.
-  - Switch with `/wind` (or `/wind gusty`, `/wind steady`), or right-click an
+  - Switch with `/ascii-aurora-wind` (or `/ascii-aurora-wind gusty`,
+    `/ascii-aurora-wind steady`), or right-click an
     empty part of the conversation and choose **Wind: make it gusty / steady**.
     The choice is remembered.
 
@@ -69,7 +77,8 @@ Once installed it loads in every new session, desktop app included.
 | --- | --- |
 | `.claude-plugin/plugin.json` | The mod's name and description |
 | `hooks/hooks.json` | Points Claude Code at `register.tsx` |
-| `hooks/register.tsx` | Palette, message style, sound, wind modes, `/wind`, the right-click item, and the backdrop hook |
+| `hooks/register.tsx` | Palette, message style, sound, wind modes, `/ascii-aurora-wind`, `/ascii-aurora-snow`, the right-click item, and the backdrop hook |
+| `hooks/season.js` | Works out the cold months from the time zone and the month |
 | `hooks/scene.js` | Generates the still ASCII sky as one SVG (seeded, so it is the same every time) |
 | `hooks/aurora-sky.ts` | The GPU shader that animates the sky in the desktop app. `claude plugin validate .` prints its cost |
 | `hooks/make-colors.js` | Turns a few colours into a full palette. Copied from Claude Code's plugin-authoring skill: don't edit it, copy it again when Claude Code updates |

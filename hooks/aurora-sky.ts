@@ -43,7 +43,12 @@ import {
   vec2,
   vec3,
   vec4,
+  values,
 } from 'claude-code/shader'
+
+// What the mod sets while the sky plays: `snow` 1 when it is snowing this
+// session (a cold month where the person is, and a 30% chance), else 0.
+const settings = values({ snow: [0, 1] })
 
 // A steady pseudo-random number, 0 to 1, for a cell of the screen.
 function hash(cell: vec2): number {
@@ -162,6 +167,22 @@ function curtain(uv: vec2, shift: number, low: number, high: number): vec3 {
 // where the light came from, so they travel with the curtain and no
 // character is ever split between two patches. Each patch shimmers once
 // every 10 to 18 seconds.
+// One layer of falling snow, at `point` (in points, y up): square pixel
+// flakes `flake` points across, at most one to each `cell` points square
+// (a `share` of the cells have one), falling `speed` points a second and
+// drifting a little from side to side. Answers how much flake is here.
+function snowfall(point: vec2, t: number, cell: number, flake: number, speed: number, share: number, salt: number): number {
+  const at = vec2(point.x, point.y + t * speed)
+  const home = floor(at / cell)
+  const roll = hash(vec2(home + salt))
+  const place = vec2(hash(vec2(home + salt + 3.1)), hash(vec2(home + salt + 7.7)))
+  const drift = sin(t * (0.4 + roll * 0.5) + roll * 6.28) * cell * 0.15
+  const centre = vec2((home + 0.2 + place * 0.6) * cell + vec2(drift, 0))
+  const off = vec2(abs(at - centre))
+  const edge = max(off.x, off.y) - flake * 0.5
+  return (1 - smoothstep(-px * 0.5, px * 0.5, edge)) * step(1 - share, roll)
+}
+
 function shimmer(t: number, x: number, y: number, salt: number): number {
   const patch = hash(vec2(floor(vec2(x / 16, (y - 16) / 30)) + salt))
   return 0.9 + 0.1 * sin(t * (0.35 + patch * 0.3) + patch * 6.28)
@@ -238,7 +259,17 @@ export default shader({
       const glow = 0.3 + 0.35 * (1 + sin(t * (1.2 + bulbSeed * 1.6) + bulbSeed * 6.28))
       const shown = vec3(lit * mix(1, glow, bulb))
 
-      return vec4(min(shown, vec3(here.a)), here.a)
+      // Light pixel snow, in three depths (far, middle, near: smaller,
+      // slower and fainter the further away), over the whole scene when it
+      // is snowing. Each flake crosses any spot in a moment, and few cross
+      // at once, far under the app's limit for flashing.
+      const far = snowfall(p.point, t, 26, 1.2, 14, 0.45, 11) * 0.35
+      const middle = snowfall(p.point, t, 40, 1.8, 24, 0.4, 23) * 0.55
+      const near = snowfall(p.point, t, 64, 2.6, 38, 0.35, 37) * 0.8
+      const flakes = max(far, max(middle, near)) * settings.snow
+      const snowy = vec3(mix(shown, vec3(0.92, 0.96, 1), flakes))
+
+      return vec4(min(snowy, vec3(here.a)), here.a)
     }),
   ],
 })
