@@ -170,6 +170,7 @@ conversation and choosing **Wind: make it gusty / steady**.
 | --- | --- |
 | `.claude-plugin/plugin.json` | The mod's name, version, description, author and licence |
 | `.claude-plugin/marketplace.json` | Makes this repository a marketplace, so it installs with one line |
+| `.claude-plugin/icon.png` | The plugin's icon, made by `scripts/make-icon.mjs` |
 | `hooks/hooks.json` | Points Claude Code at `register.tsx` |
 | `hooks/register.tsx` | Palette for both modes, message styles, sound and wind modes, the three commands, the right-click item, the snow roll, the Christmas check, and the backdrop |
 | `hooks/scene.js` | Generates the still ASCII sky as one SVG, night and day, with the optional Christmas lights and snow caps. It's seeded, so the sky is the same every time |
@@ -178,6 +179,7 @@ conversation and choosing **Wind: make it gusty / steady**.
 | `hooks/make-colors.js` | Turns a few colours into a full palette. It's copied from Claude Code's plugin-authoring skill, with `make-colors.d.ts`: don't edit them, and copy them again when Claude Code updates. They aren't covered by this repository's licence |
 | `hooks/*.test.ts(x)` | Tests, run with `claude plugin test` |
 | `scripts/preview-scene.mjs` | Writes `preview/scene.svg`, for tuning the sky in a browser |
+| `scripts/make-icon.mjs` | Draws the icon (the three curtains as pixel rays inside the message frame) and renders it to `.claude-plugin/icon.png` with headless Chrome |
 | `docs/images/` | The gallery above |
 | `.claude-plugin/types/` | API types Claude Code writes for editors and `tsc`. Generated, not committed |
 | `LICENSE` | The licence: CC BY-NC-SA 4.0 |
