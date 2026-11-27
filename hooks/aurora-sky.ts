@@ -1,16 +1,15 @@
 // aurora-sky.ts: the backdrop's motion, played on the GPU by the desktop app.
 //
-// It redraws the still ASCII sky from scene.js every frame, moving it the
-// way the original CSS sky moved: the curtains slide back and forth and
-// lean a degree or two, as one sheet, so every character keeps its shape.
-// The slide is rounded to whole pixels, so the characters stay sharp. On
-// top of that only brightness changes: a soft band of light crosses the
-// curtains, the light breathes and shimmers in patches, and the stars
-// twinkle. Everything is slow (no spot changes more than once every few
+// It redraws the still ASCII sky from scene.js every frame: the curtains
+// slide back and forth as one sheet, by whole pixels, so every character
+// keeps its shape and stays sharp, while the stars stay put. On top of that
+// only brightness changes: a soft band of light crosses the curtains, the
+// light breathes and shimmers in patches, and the stars twinkle. Everything is slow (no spot changes more than once every few
 // seconds), far under the app's limit for flashing. Under Reduce Motion
 // `still` is 1, time stands still, and the sky shows as drawn.
 import {
   PI,
+  abs,
   cos,
   dot,
   exp,
@@ -26,6 +25,7 @@ import {
   sin,
   size,
   smoothstep,
+  step,
   still,
   time,
   vec2,
@@ -78,22 +78,23 @@ export default shader({
       const x = (uv.x * size.x + overflow.x) / scale
       const y = ((1 - uv.y) * size.y + overflow.y) / scale
 
-      // The original sway: the curtains slide between -34 and 30 units and
-      // lean between 2.2 and -1.8 degrees about the main curtain's hem, over
-      // 34 seconds each way. The upper curtains also drift a little on their
-      // own 43-second clock, a lean of under 3 degrees more.
-      const main = swing(t, 34)
-      const lean = mix(2.2, -1.8, main) * (PI / 180)
-      const upper = 1 - smoothstep(160, 360, y)
-      const units = mix(-34, 30, main) - lean * (480 - y) + upper * mix(8, -8, swing(t, 43))
+      // The original sway: the curtains slide between -34 and 30 units over
+      // 34 seconds each way. Every character moves by the same amount at the
+      // same moment, so none ripples: any lean, or any fade of the slide
+      // from row to row, would round to whole pixels at different moments
+      // in different rows. The sheet is everything above the line between
+      // character rows at 556 units, just under the lowest curtain; below
+      // it, the ridge stays put. scene.js's rows end 16 units down, 15 apart.
+      const row = 16 + 15 * floor((y - 16) / 15)
+      const sliding = 1 - step(556, row)
+      const units = mix(-34, 30, swing(t, 34)) * sliding
 
-      // Only the sky moves: not the ridge, nor the window's side edges.
-      const sky = 1 - smoothstep(500, 570, y)
-      const sides = smoothstep(0, 0.06, uv.x) * (1 - smoothstep(0.94, 1, uv.x))
-
-      // In whole pixels, so the characters stay sharp.
-      const points = floor((units * scale * sky * sides) / px + 0.5) * px
-      const moved = vec2(uv.x - points / size.x, uv.y)
+      // In whole pixels, so the characters stay sharp. Past a side edge of
+      // the window the sheet is mirrored, so the curtain carries on into the
+      // edge with no seam (its ray characters read the same either way)
+      // and nothing there is squeezed or smeared.
+      const points = floor((units * scale) / px + 0.5) * px
+      const moved = vec2(1 - abs(1 - abs(uv.x - points / size.x)), uv.y)
 
       // The stars stay put while the aurora moves, as real ones do. The
       // sliding sheet has its stars lifted out (each one's light above the
@@ -111,6 +112,7 @@ export default shader({
       const top = max(color.r, max(color.g, color.b))
       const low = min(color.r, min(color.g, color.b))
       const lum = dot(color, vec3(0.3, 0.59, 0.11))
+      const sky = 1 - smoothstep(500, 570, y)
       const aurora = smoothstep(0.12, 0.4, top - low) * smoothstep(0.1, 0.35, lum) * sky
 
       // A soft band of light crosses the curtains every 30 seconds.
