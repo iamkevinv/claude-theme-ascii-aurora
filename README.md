@@ -56,6 +56,9 @@ Once installed it loads in every new session, desktop app included.
 - **Christmas.** On 24 and 25 December, by your computer's own calendar,
   every pine is hung with coloured lights and a gold star, each bulb
   glowing up and down on its own. They go up and come down around midnight.
+  Type `/ascii-aurora-christmas` to hang them on any day, or take them
+  down, for the rest of the session (`/ascii-aurora-christmas on`,
+  `/ascii-aurora-christmas off`).
 - **Colours.** Dark only: near-black navy surfaces and icy mint text. Code
   uses the aurora's colours: teal keywords, green strings, violet literals,
   magenta names, gold variables.
@@ -77,7 +80,7 @@ Once installed it loads in every new session, desktop app included.
 | --- | --- |
 | `.claude-plugin/plugin.json` | The mod's name and description |
 | `hooks/hooks.json` | Points Claude Code at `register.tsx` |
-| `hooks/register.tsx` | Palette, message style, sound, wind modes, `/ascii-aurora-wind`, `/ascii-aurora-snow`, the right-click item, and the backdrop hook |
+| `hooks/register.tsx` | Palette, message style, sound, wind modes, `/ascii-aurora-wind`, `/ascii-aurora-snow`, `/ascii-aurora-christmas`, the right-click item, and the backdrop hook |
 | `hooks/season.js` | Works out the cold months from the time zone and the month |
 | `hooks/scene.js` | Generates the still ASCII sky as one SVG (seeded, so it is the same every time) |
 | `hooks/aurora-sky.ts` | The GPU shader that animates the sky in the desktop app. `claude plugin validate .` prints its cost |
