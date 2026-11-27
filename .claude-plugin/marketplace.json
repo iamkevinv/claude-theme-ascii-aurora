@@ -1,0 +1,5 @@
+{
+  "name": "claude-theme-ascii-aurora",
+  "owner": { "name": "Kevin Vanderbeken" },
+  "plugins": [{ "name": "ascii-aurora", "source": "./" }]
+}

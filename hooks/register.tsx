@@ -1,0 +1,391 @@
+import type {
+  EngineInterface,
+  Register,
+  ThemeMessageRule,
+  ThemeResult,
+  ThemeSetArgs,
+  ThemeSound,
+  ThemeStyle,
+  Timer,
+} from 'claude-code'
+
+import { makeColors } from './make-colors.js'
+import { auroraScene } from './scene.js'
+
+// ASCII aurora: a polar night. Surfaces are deep blue-black, text is icy mint,
+// and the five roles are the aurora's own colours, so code comes out in them:
+// keywords teal, strings green, literals violet, names magenta, variables gold.
+const { theme, problems } = makeColors({
+  label: 'ASCII Aurora',
+  only: 'dark',
+  roles: { accent: '#3fe0c5', danger: '#ff6b9a', success: '#7cf29a', warning: '#f6c667', pro: '#b48cff' },
+  dark: {
+    gray: {
+      anchors: {
+        'surface-0': '#060b13',
+        'surface-1': '#0a121c',
+        'surface-2': '#0e1824',
+        'surface-3': '#121e2b',
+        'text-primary': '#e6f7f1',
+        'text-secondary': '#b9d6ce',
+        'text-muted': '#8eaea8',
+      },
+    },
+    git: { added: '#7cf29a', removed: '#ff6b9a', modified: '#f6c667', merged: '#b48cff' },
+  },
+})
+
+const SCENE = 'ascii-aurora'
+const SKY = auroraScene()
+
+type Hex = `#${string}`
+
+// A box drawn like ASCII art: +-----+ with the corners in their own colour.
+// The drawing is cut in nine, so the corners stay put and the edges stretch.
+function asciiBox(body: Hex, corner: Hex, line?: Hex): NonNullable<ThemeMessageRule['fill']> {
+  return {
+    vector: {
+      viewBox: 48,
+      slice: 8,
+      paths: [
+        { d: 'M4 4H44V44H4Z', color: body },
+        ...(line === undefined ? [] : [{ d: 'M0 4H48M0 44H48M4 0V48M44 0V48', strokeWidth: 1, color: line }]),
+        {
+          d: 'M0 4H8M4 0V8M40 4H48M44 0V8M0 44H8M4 40V48M40 44H48M44 40V48',
+          strokeWidth: 1.5,
+          color: corner,
+        },
+      ],
+    },
+  }
+}
+
+const STYLE: ThemeStyle = {
+  Text: { fontFamily: ['mono'], fontSize: 14, lineHeight: 22 },
+  Heading: { fontFamily: ['mono'], color: '#7df5c4', fontWeight: 'bold', letterSpacing: 0.5 },
+  // Your messages: a full ASCII frame, aurora-green lines, violet corners.
+  UserMessage: {
+    color: '#eafff8',
+    backgroundColor: '#0c1e26',
+    fill: asciiBox('#0c1e26', '#7a68e8', '#1a7a60'),
+    paddingX: 18,
+    paddingY: 13,
+    shadow: { blur: 18, color: '#2ee6a02e' },
+  },
+  // Claude's replies: a dark pane with only its corners marked.
+  AssistantMessage: {
+    color: '#d6ebe5',
+    backgroundColor: '#08111a',
+    fill: asciiBox('#08111a', '#6655c0'),
+    paddingX: 18,
+    paddingY: 13,
+  },
+  ToolUse: {
+    color: '#a8eedb',
+    fontFamily: ['code'],
+    backgroundColor: '#08121b',
+    borderColor: '#1d3a42',
+    borderWidth: 1,
+    radius: 2,
+    paddingX: 10,
+    paddingY: 4,
+  },
+}
+
+// Off until you press the speaker in the title bar. Wind over the snow,
+// now and then a high bell, like the sky crackling, and a low note
+// answering it.
+//
+// The wind has two modes, switched from the right-click menu or `/wind`:
+// steady, always there; or gusty, where it rises and dies away to almost
+// nothing, for windy and calm spells of random length.
+
+type WindMode = 'steady' | 'gusty'
+
+const isWindMode = (value: unknown): value is WindMode => value === 'steady' || value === 'gusty'
+
+// How quiet a calm spell gets, as a share of full wind.
+const CALM = 0.04
+
+const round = (n: number) => Math.round(n * 1000) / 1000
+
+// The wind's layers at `level`, 0 (still) to 1 (full).
+type AmbienceLayer = NonNullable<ThemeSound['ambience']>['layers'][number]
+
+function wind(level: number, mode: WindMode): AmbienceLayer[] {
+  const layers: AmbienceLayer[] = [
+    { wave: 'brown', drone: true, gain: round(0.16 * level), filter: { type: 'lowpass', hz: 220, to: 520 } },
+    {
+      wave: 'pink',
+      drone: true,
+      gain: round(0.05 * level),
+      filter: { type: 'bandpass', hz: 900, to: 1600 },
+      tremolo: { hz: 0.07, depth: 0.6 },
+    },
+  ]
+
+  // In a windy spell, gusts on top: soft bursts that sweep down in pitch.
+  if (mode === 'gusty' && level > 0.3) {
+    layers.push({
+      wave: 'pink',
+      scatter: round(0.06 + 0.12 * level),
+      gain: round(0.07 * level),
+      attack: 1.5,
+      release: 2.4,
+      pan: -0.2,
+      filter: { type: 'bandpass', hz: 1500, to: 600 },
+    })
+  }
+
+  return layers
+}
+
+function sound(level: number, mode: WindMode): ThemeSound {
+  return {
+    ambience: {
+      layers: [
+        ...wind(level, mode),
+        // Now and then a soft low note from the same scale as the bells,
+        // panned the other way so the two answer each other.
+        {
+          wave: 'triangle',
+          notes: ['E2', 'B2', 'C#3', 'E3', 'F#3'],
+          scatter: 0.05,
+          gain: 0.12,
+          attack: 0.4,
+          release: 3.5,
+          pan: -0.3,
+          filter: { type: 'lowpass', hz: 700 },
+        },
+        {
+          wave: 'bell',
+          notes: ['B5', 'E6', 'F#6', 'G#6', 'C#7'],
+          scatter: 0.09,
+          gain: 0.07,
+          attack: 0.02,
+          release: 3,
+          pan: 0.3,
+        },
+      ],
+      reverb: 0.5,
+    },
+    cues: CUES,
+  }
+}
+
+const CUES: ThemeSound['cues'] = {
+  send: { layers: [{ wave: 'sine', notes: ['B5', 'E6'], step: 0.07, gain: 0.18, release: 0.35 }] },
+  tool: { layers: [{ wave: 'triangle', notes: ['E7'], gain: 0.04, release: 0.08 }] },
+  done: { layers: [{ wave: 'bell', notes: ['E5', 'G#5', 'B5', 'E6'], step: 0.11, gain: 0.2, release: 1.8 }], reverb: 0.4 },
+  ask: { layers: [{ wave: 'sine', notes: ['G#5', 'C#6'], step: 0.13, gain: 0.18, release: 0.6 }] },
+  error: { layers: [{ wave: 'triangle', notes: ['E4', 'C4'], step: 0.16, gain: 0.16, release: 0.5 }] },
+  compact: {
+    layers: [{ wave: 'pink', gain: 0.1, attack: 0.3, release: 1.2, filter: { type: 'bandpass', hz: 2400, to: 400 } }],
+  },
+  click: {
+    layers: [{ wave: 'bell', notes: ['E5', 'F#5', 'G#5', 'B5', 'C#6', 'E6'], gain: 0.14, release: 1 }],
+    reverb: 0.25,
+  },
+}
+
+const BASE: ThemeSetArgs = {
+  colors: theme,
+  overrideColorScheme: 'dark',
+  backdrop: { scene: SCENE, glass: { blur: 10, tint: '#060b13', opacity: 0.7 } },
+}
+
+// A fade between spells: this many steps, this far apart. The app also
+// cross-fades each change of sound, which smooths the steps.
+const FADE_STEPS: readonly [number, number] = [4, 7]
+const FADE_STEP_MS = 2500
+// How long each kind of spell lasts, in seconds.
+const WINDY_SPELL: readonly [number, number] = [20, 90]
+const CALM_SPELL: readonly [number, number] = [15, 75]
+
+const between = ([low, high]: readonly [number, number]) => low + Math.random() * (high - low)
+const ease = (t: number) => t * t * (3 - 2 * t)
+
+// The weather, for this load of the module: a reload reads the mode back
+// from the store and starts over.
+const weather = {
+  mode: 'steady' as WindMode,
+  level: 1,
+  hasSound: true,
+  isWindy: true,
+  fade: { from: 1, to: 1, step: 0, steps: 1 },
+  timer: undefined as Timer | undefined,
+}
+
+// Sets the whole look, richest first: a build that refuses `sound` or
+// `style` refuses the whole set, so fall back a step at a time.
+async function setLook($: EngineInterface): Promise<ThemeResult | undefined> {
+  const looks: ThemeSetArgs[] = [
+    ...(weather.hasSound ? [{ ...BASE, style: STYLE, sound: sound(weather.level, weather.mode) }] : []),
+    { ...BASE, style: STYLE },
+    BASE,
+  ]
+
+  for (const [index, look] of looks.entries()) {
+    try {
+      return await $.theme.set(look)
+    } catch (error) {
+      $.ui.log(`ascii-aurora: ${String(error)}`)
+      if (index === 0 && weather.hasSound) {
+        weather.hasSound = false
+        stopGusts()
+      }
+    }
+  }
+
+  return undefined
+}
+
+function stopGusts() {
+  weather.timer?.cancel()
+  weather.timer = undefined
+}
+
+// Gusty wind: calm and windy spells of random length, each faded into over
+// a few steps, for as long as the mode is gusty.
+function startGusts($: EngineInterface) {
+  stopGusts()
+  weather.isWindy = weather.level > 0.5
+  weather.timer = $.clock.after(between(weather.isWindy ? WINDY_SPELL : CALM_SPELL) * 1000, () => turnWeather($))
+}
+
+// The spell ends: fade toward the other kind.
+function turnWeather($: EngineInterface) {
+  weather.isWindy = !weather.isWindy
+  weather.fade = {
+    from: weather.level,
+    to: weather.isWindy ? between([0.65, 1]) : CALM,
+    step: 0,
+    steps: Math.round(between(FADE_STEPS)),
+  }
+  fadeStep($)
+}
+
+function fadeStep($: EngineInterface) {
+  const fade = weather.fade
+  fade.step += 1
+  weather.level = fade.from + (fade.to - fade.from) * ease(fade.step / fade.steps)
+  void setLook($)
+  weather.timer =
+    fade.step < fade.steps
+      ? $.clock.after(FADE_STEP_MS, () => fadeStep($))
+      : $.clock.after(between(weather.isWindy ? WINDY_SPELL : CALM_SPELL) * 1000, () => turnWeather($))
+}
+
+async function setMode($: EngineInterface, mode: WindMode) {
+  weather.mode = mode
+  stopGusts()
+  if (mode === 'steady') {
+    weather.level = 1
+  }
+  await setLook($)
+  if (mode === 'gusty' && weather.hasSound) {
+    startGusts($)
+  }
+  try {
+    await $.store.set('wind', mode)
+  } catch {
+    // Remembering is a nicety: the mode still holds for this session.
+  }
+  $.ui.invalidate('ui.render')
+}
+
+export const register: Register = on => {
+  on('session.start', async ($, e, next) => {
+    const unpainted = problems.find(line => line.startsWith("Desktop won't paint"))
+
+    if (unpainted !== undefined) {
+      $.ui.toast(unpainted)
+    }
+
+    try {
+      const stored = await $.store.get('wind')
+      if (isWindMode(stored)) {
+        weather.mode = stored
+      }
+    } catch {
+      // No store: steady wind, the default.
+    }
+
+    await $.command.register({
+      name: 'wind',
+      description: 'ASCII Aurora sound: switch the wind between steady and gusty (or name one)',
+    })
+
+    const result = await setLook($)
+
+    if (result !== undefined && !result.isDrawn) {
+      $.ui.log(`ascii-aurora: ${result.reason}`)
+    }
+    if (weather.mode === 'gusty' && weather.hasSound) {
+      startGusts($)
+    }
+
+    return next(e)
+  })
+
+  on('command.run', { command: 'wind' }, async ($, e) => {
+    const asked = e.args.trim().toLowerCase()
+
+    if (asked !== '' && !isWindMode(asked)) {
+      return { text: `Wind is ${weather.mode}. Use /wind steady, /wind gusty, or /wind alone to switch.` }
+    }
+    if (!weather.hasSound) {
+      return { text: 'This version of the app does not take theme sound, so there is no wind to change.' }
+    }
+
+    await setMode($, asked === '' ? (weather.mode === 'steady' ? 'gusty' : 'steady') : asked)
+
+    return {
+      text:
+        weather.mode === 'gusty'
+          ? 'Wind is now gusty: it rises and dies away to almost nothing, in spells of random length.'
+          : 'Wind is now steady.',
+    }
+  })
+
+  // A row in the desktop app's right-click menu, on the conversation itself
+  // (not on a link, a selection or code, whose menus have their own jobs).
+  on('ui.render', { component: 'ContextMenu' }, async ($, e, next) => {
+    const below = await next(e)
+
+    if (!weather.hasSound || e.props.link !== undefined || e.props.selection !== undefined || e.props.code !== undefined) {
+      return below
+    }
+
+    const { Box, Button, Text } = $.ui.resolve(e)
+    const other: WindMode = weather.mode === 'steady' ? 'gusty' : 'steady'
+
+    return (
+      <Box flexDirection="column">
+        {below}
+        <Button key="wind" onPress={() => setMode($, other)}>
+          {other === 'gusty' ? 'Wind: make it gusty' : 'Wind: make it steady'}{' '}
+          <Text dimColor>
+            {other === 'gusty' ? 'Aurora sound: comes and goes, fading to almost nothing' : 'Aurora sound: always there'}
+          </Text>
+        </Button>
+      </Box>
+    )
+  })
+
+  on('ui.render', { component: 'Backdrop' }, ($, e, next) => {
+    if ((e.surface !== 'desktop' && e.surface !== 'mobile') || e.props.scene !== SCENE) {
+      return next(e)
+    }
+
+    const { Svg } = $.ui.resolve(e)
+
+    return (
+      <Svg
+        source={SKY}
+        alt="An ASCII-art aurora borealis: green, teal and violet curtains of characters swaying over starlit ASCII mountains and pines"
+        isInteractive
+      />
+    )
+  })
+}
