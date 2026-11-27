@@ -254,38 +254,24 @@ function snow() {
 
 // --- The whole scene --------------------------------------------------
 
+// The sky is drawn once and holds still: the motion is the GPU shader's
+// (aurora-sky.ts), which redraws this picture every frame. Where the app
+// plays no shader (mobile, Reduce Motion, a slow machine), this still sky
+// is what shows, so it is a finished scene on its own. No CSS comments go
+// in the style: the app's checks read their words too.
 const STYLE = `
 text { font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "DejaVu Sans Mono", monospace; font-size: ${FONT_SIZE}px; white-space: pre; }
-.aurora, .shine { font-weight: 700; }
-.aurora { fill: url(#altitude); }
-.shine { fill: #eafff5; }
-.sway { transform-box: fill-box; transform-origin: 50% 100%; }
-.main { opacity: 0.95; animation: swayA 34s ease-in-out infinite alternate, breathe 13s ease-in-out infinite alternate; }
-.high { opacity: 0.7; animation: swayB 43s ease-in-out infinite alternate, breatheSoft 17s ease-in-out infinite alternate; }
-.veil { opacity: 0.42; animation: swayC 57s ease-in-out infinite alternate, breatheFaint 23s ease-in-out infinite alternate; }
-.flicker { opacity: 0; animation: flicker 9s ease-in-out infinite alternate; }
-.steady { animation: steady 9s ease-in-out infinite alternate; }
-.sweep { animation: sweep 26s linear infinite; }
-.tw { animation: twinkle 6s ease-in-out infinite; }
-.t1 { animation-duration: 5.2s; animation-delay: -1s; }
-.t2 { animation-duration: 7.4s; animation-delay: -3.3s; }
-.t3 { animation-duration: 9.1s; animation-delay: -5.6s; }
-.t4 { animation-duration: 11.7s; animation-delay: -2.2s; }
+.aurora { font-weight: 700; fill: url(#altitude); }
+.main { opacity: 0.95; }
+.high { opacity: 0.7; }
+.veil { opacity: 0.42; }
+.alt { opacity: 0.45; }
+.tw { opacity: 0.85; }
 .far { fill: #4f8079; }
 .peaks { fill: #8ccfc0; }
 .near { fill: #2a5148; }
 .trees { fill: #255446; }
 .snow { fill: #1a2d33; }
-@keyframes swayA { from { transform: translateX(-34px) skewX(2.2deg); } to { transform: translateX(30px) skewX(-1.8deg); } }
-@keyframes swayB { from { transform: translateX(26px) skewX(-1.6deg); } to { transform: translateX(-28px) skewX(1.8deg); } }
-@keyframes swayC { from { transform: translateX(-18px); } to { transform: translateX(22px); } }
-@keyframes breathe { from { opacity: 0.72; } to { opacity: 1; } }
-@keyframes breatheSoft { from { opacity: 0.45; } to { opacity: 0.85; } }
-@keyframes breatheFaint { from { opacity: 0.22; } to { opacity: 0.55; } }
-@keyframes flicker { from { opacity: 0; } to { opacity: 0.85; } }
-@keyframes steady { from { opacity: 1; } to { opacity: 0.35; } }
-@keyframes sweep { from { transform: translateX(-700px); } to { transform: translateX(1800px); } }
-@keyframes twinkle { 0%, 100% { opacity: 0.95; } 50% { opacity: 0.2; } }
 `
 
 export function auroraScene() {
@@ -315,14 +301,7 @@ export function auroraScene() {
     '<radialGradient id="glowViolet" cx="0.3" cy="0.16" r="0.45">',
     '<stop offset="0" stop-color="#7a4dd8" stop-opacity="0.16"/><stop offset="1" stop-color="#7a4dd8" stop-opacity="0"/>',
     '</radialGradient>',
-    '<linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">',
-    '<stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.5" stop-color="#fff" stop-opacity="1"/>',
-    '<stop offset="1" stop-color="#fff" stop-opacity="0"/>',
-    '</linearGradient>',
     '<filter id="soft" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="28"/></filter>',
-    '<mask id="travel" maskUnits="userSpaceOnUse" x="-200" y="0" width="2000" height="1000">',
-    '<rect class="sweep" x="0" y="0" width="560" height="1000" fill="url(#beam)"/>',
-    '</mask>',
     '</defs>',
     '<!-- night sky and the glow the aurora casts -->',
     `<rect width="${W}" height="${H}" fill="url(#sky)"/>`,
@@ -333,13 +312,11 @@ export function auroraScene() {
     '<!-- stars -->',
     `<g>${stars()}</g>`,
     '<!-- the curtains -->',
-    `<g class="sway veil aurora">${rows(veil)}</g>`,
-    `<g class="sway high aurora"><g class="steady">${rows(high)}</g><g class="flicker">${rows(highAlt)}</g></g>`,
-    `<g class="sway main">`,
-    `<g class="aurora steady">${rows(main)}</g>`,
-    `<g class="aurora flicker">${rows(mainAlt)}</g>`,
-    `<g class="shine" mask="url(#travel)" opacity="0.55">${rows(main)}</g>`,
-    '</g>',
+    // Each curtain twice, the second dithered differently and fainter, for
+    // the density of light the original moving sky had at its fullest.
+    `<g class="veil aurora">${rows(veil)}</g>`,
+    `<g class="high aurora">${rows(high)}<g class="alt">${rows(highAlt)}</g></g>`,
+    `<g class="main aurora">${rows(main)}<g class="alt">${rows(mainAlt)}</g></g>`,
     '<!-- far range, near range, forest and snow -->',
     `<path d="${ridgeFill(far)}" fill="#050b12"/>`,
     `<g class="far">${rows(ridgeGrid(far, 0, 5))}</g>`,

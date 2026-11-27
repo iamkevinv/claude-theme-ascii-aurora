@@ -37,9 +37,11 @@ Once installed it loads in every new session, desktop app included.
 ## What it does
 
 - **Backdrop.** Three curtains of `. ' : ; ! | l I #` rays, coloured by
-  altitude (green low, then teal, violet and magenta high). They sway and
-  breathe slowly, and a band of light travels along the main curtain. Stars
-  twinkle. With reduced motion turned on, the scene holds still.
+  altitude (green low, then teal, violet and magenta high). The sky is
+  drawn once as a still picture, and a small GPU shader brings it to life:
+  the curtains ripple and shimmer, a band of light travels along them, and
+  the stars twinkle. With reduced motion turned on, or on the mobile app,
+  the still sky shows.
 - **Colours.** Dark only: near-black navy surfaces and icy mint text. Code
   uses the aurora's colours: teal keywords, green strings, violet literals,
   magenta names, gold variables.
@@ -61,7 +63,8 @@ Once installed it loads in every new session, desktop app included.
 | `.claude-plugin/plugin.json` | The mod's name and description |
 | `hooks/hooks.json` | Points Claude Code at `register.tsx` |
 | `hooks/register.tsx` | Palette, message style, sound, wind modes, `/wind`, the right-click item, and the backdrop hook |
-| `hooks/scene.js` | Generates the ASCII sky as one SVG (seeded, so it is the same every time) |
+| `hooks/scene.js` | Generates the still ASCII sky as one SVG (seeded, so it is the same every time) |
+| `hooks/aurora-sky.ts` | The GPU shader that animates the sky in the desktop app. `claude plugin validate .` prints its cost |
 | `hooks/make-colors.js` | Turns a few colours into a full palette. Copied from Claude Code's plugin-authoring skill: don't edit it, copy it again when Claude Code updates |
 | `hooks/aurora.test.tsx` | Tests, run with `claude plugin test` |
 | `scripts/preview-scene.mjs` | Writes `preview/scene.svg` for tuning the sky in a browser |
