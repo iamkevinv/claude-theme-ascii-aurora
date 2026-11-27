@@ -37,6 +37,9 @@ const { theme, problems } = makeColors({
 
 const SCENE = 'ascii-aurora'
 const SKY = auroraScene()
+// On Christmas Eve and Christmas Day, by the computer's own calendar, every
+// pine is hung with coloured lights.
+const FESTIVE_SKY = auroraScene({ festive: true })
 
 type Hex = `#${string}`
 
@@ -295,6 +298,23 @@ async function setMode($: EngineInterface, mode: WindMode) {
   $.ui.invalidate('ui.render')
 }
 
+// Christmas Eve or Christmas Day, in the computer's own time zone.
+function isChristmas(ms: number): boolean {
+  const day = new Date(ms)
+  return day.getMonth() === 11 && (day.getDate() === 24 || day.getDate() === 25)
+}
+
+const christmas = { on: false, timer: undefined as Timer | undefined }
+
+// Hangs the lights, or takes them down, when the day changes.
+async function checkChristmas($: EngineInterface) {
+  const on = isChristmas(await $.clock.now())
+  if (on !== christmas.on) {
+    christmas.on = on
+    $.ui.invalidate('ui.render')
+  }
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const unpainted = problems.find(line => line.startsWith("Desktop won't paint"))
@@ -327,6 +347,12 @@ export const register: Register = on => {
     if (weather.mode === 'gusty' && weather.hasSound) {
       startGusts($)
     }
+
+    // Look at the calendar now, and every 10 minutes, so the lights go up
+    // and come down around midnight.
+    christmas.on = isChristmas(await $.clock.now())
+    christmas.timer?.cancel()
+    christmas.timer = $.clock.every(10 * 60 * 1000, () => void checkChristmas($))
 
     return next(e)
   })
@@ -388,8 +414,12 @@ export const register: Register = on => {
     return (
       <Shader module="./aurora-sky.ts">
         <Svg
-          source={SKY}
-          alt="An ASCII-art aurora borealis: green, teal and violet curtains of characters over starlit ASCII mountains and pines"
+          source={christmas.on ? FESTIVE_SKY : SKY}
+          alt={
+            christmas.on
+              ? 'An ASCII-art aurora borealis over starlit ASCII mountains and pines hung with coloured Christmas lights'
+              : 'An ASCII-art aurora borealis: green, teal and violet curtains of characters over starlit ASCII mountains and pines'
+          }
         />
       </Shader>
     )
