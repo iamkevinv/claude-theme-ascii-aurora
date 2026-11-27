@@ -1,8 +1,8 @@
 // scene.js: the ASCII aurora backdrop, drawn as one SVG string.
 //
-// Everything is glyphs on a 200 x 66 character grid: three aurora curtains
-// whose colour follows altitude (green low, teal, then violet and magenta
-// high, as the real sky does), a field of twinkling stars, and two ASCII
+// Everything is glyphs on a 200 x 66 character grid: three aurora curtains,
+// each in its own colour family (green and teal low, cyan and blue above,
+// violet and magenta highest, as the real sky's are), a field of stars, and two ASCII
 // mountain ridges with a pine forest along the near one. The noise is
 // seeded, so the sky is the same every time.
 
@@ -140,22 +140,33 @@ function drawCurtain(band, dither, seedShift = 0) {
 
 // --- Stars ------------------------------------------------------------
 
+// Stars sit one to a cell of STAR_CELL units, centred well inside it, so
+// the shader (aurora-sky.ts, which uses the same size) can twinkle each
+// whole star on its own clock by the cell it is in.
+const STAR_CELL = 32
+
 function stars() {
   const random = mulberry32(4242)
   const glyphs = ['.', '.', '.', '.', '.', "'", '`', '+', '+', '*']
   const tints = ['#dbe9ff', '#c4defc', '#efe6ff', '#cdfbee', '#fff6e0']
   let out = ''
-  for (let i = 0; i < 190; i++) {
-    const x = +(random() * W).toFixed(1)
-    // Denser high in the sky, thinning toward the ridge.
-    const y = +(6 + Math.pow(random(), 1.35) * 640).toFixed(1)
-    const glyph = glyphs[Math.floor(random() * glyphs.length)]
-    const tint = tints[Math.floor(random() * tints.length)]
-    const size = glyph === '*' || glyph === '+' ? 9 + random() * 4 : 11 + random() * 6
-    const kind = random()
-    const twinkle = kind < 0.62 ? ` class="tw t${1 + Math.floor(random() * 4)}"` : ''
-    const opacity = kind < 0.62 ? '' : ` opacity="${(0.25 + random() * 0.45).toFixed(2)}"`
-    out += `<text x="${x}" y="${y}" font-size="${size.toFixed(1)}" fill="${tint}"${twinkle}${opacity}>${glyph}</text>`
+  // Stars stop short of the ridge, so the tallest peaks are never taken
+  // for stars.
+  for (let row = 0; row * STAR_CELL < 540; row++) {
+    for (let col = 0; col * STAR_CELL < W; col++) {
+      // Denser high in the sky, thinning toward the ridge.
+      const top = row * STAR_CELL
+      if (random() > 0.34 * Math.pow(1 - top / 700, 0.9)) continue
+      const x = +(col * STAR_CELL + 11 + random() * 10).toFixed(1)
+      const y = +(top + 11 + random() * 10).toFixed(1)
+      const glyph = glyphs[Math.floor(random() * glyphs.length)]
+      const tint = tints[Math.floor(random() * tints.length)]
+      const size = glyph === '*' || glyph === '+' ? 9 + random() * 4 : 11 + random() * 6
+      const kind = random()
+      const twinkle = kind < 0.62 ? ' class="tw"' : ''
+      const opacity = kind < 0.62 ? '' : ` opacity="${(0.25 + random() * 0.45).toFixed(2)}"`
+      out += `<text x="${x}" y="${y}" font-size="${size.toFixed(1)}" fill="${tint}" text-anchor="middle" dominant-baseline="central"${twinkle}${opacity}>${glyph}</text>`
+    }
   }
   return out
 }
@@ -254,38 +265,24 @@ function snow() {
 
 // --- The whole scene --------------------------------------------------
 
+// The sky is drawn once and holds still: the motion is the GPU shader's
+// (aurora-sky.ts), which redraws this picture every frame. Where the app
+// plays no shader (mobile, Reduce Motion, a slow machine), this still sky
+// is what shows, so it is a finished scene on its own. No CSS comments go
+// in the style: the app's checks read their words too.
 const STYLE = `
 text { font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "DejaVu Sans Mono", monospace; font-size: ${FONT_SIZE}px; white-space: pre; }
-.aurora, .shine { font-weight: 700; }
-.aurora { fill: url(#altitude); }
-.shine { fill: #eafff5; }
-.sway { transform-box: fill-box; transform-origin: 50% 100%; }
-.main { opacity: 0.95; animation: swayA 34s ease-in-out infinite alternate, breathe 13s ease-in-out infinite alternate; }
-.high { opacity: 0.7; animation: swayB 43s ease-in-out infinite alternate, breatheSoft 17s ease-in-out infinite alternate; }
-.veil { opacity: 0.42; animation: swayC 57s ease-in-out infinite alternate, breatheFaint 23s ease-in-out infinite alternate; }
-.flicker { opacity: 0; animation: flicker 9s ease-in-out infinite alternate; }
-.steady { animation: steady 9s ease-in-out infinite alternate; }
-.sweep { animation: sweep 26s linear infinite; }
-.tw { animation: twinkle 6s ease-in-out infinite; }
-.t1 { animation-duration: 5.2s; animation-delay: -1s; }
-.t2 { animation-duration: 7.4s; animation-delay: -3.3s; }
-.t3 { animation-duration: 9.1s; animation-delay: -5.6s; }
-.t4 { animation-duration: 11.7s; animation-delay: -2.2s; }
+.aurora { font-weight: 700; }
+.main { opacity: 0.95; fill: url(#mainLight); }
+.high { opacity: 0.7; fill: url(#highLight); }
+.veil { opacity: 0.42; fill: url(#veilLight); }
+.alt { opacity: 0.45; }
+.tw { opacity: 0.85; }
 .far { fill: #4f8079; }
 .peaks { fill: #8ccfc0; }
 .near { fill: #2a5148; }
 .trees { fill: #255446; }
 .snow { fill: #1a2d33; }
-@keyframes swayA { from { transform: translateX(-34px) skewX(2.2deg); } to { transform: translateX(30px) skewX(-1.8deg); } }
-@keyframes swayB { from { transform: translateX(26px) skewX(-1.6deg); } to { transform: translateX(-28px) skewX(1.8deg); } }
-@keyframes swayC { from { transform: translateX(-18px); } to { transform: translateX(22px); } }
-@keyframes breathe { from { opacity: 0.72; } to { opacity: 1; } }
-@keyframes breatheSoft { from { opacity: 0.45; } to { opacity: 0.85; } }
-@keyframes breatheFaint { from { opacity: 0.22; } to { opacity: 0.55; } }
-@keyframes flicker { from { opacity: 0; } to { opacity: 0.85; } }
-@keyframes steady { from { opacity: 1; } to { opacity: 0.35; } }
-@keyframes sweep { from { transform: translateX(-700px); } to { transform: translateX(1800px); } }
-@keyframes twinkle { 0%, 100% { opacity: 0.95; } 50% { opacity: 0.2; } }
 `
 
 export function auroraScene() {
@@ -303,11 +300,23 @@ export function auroraScene() {
     '<stop offset="0" stop-color="#020409"/><stop offset="0.5" stop-color="#050b14"/>',
     '<stop offset="0.82" stop-color="#08151d"/><stop offset="1" stop-color="#0a1a1f"/>',
     '</linearGradient>',
-    // Colour by altitude: magenta at the top of the sky down to green at the hem.
-    `<linearGradient id="altitude" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="520">`,
-    '<stop offset="0" stop-color="#ff5fa8"/><stop offset="0.18" stop-color="#c77dff"/>',
-    '<stop offset="0.38" stop-color="#7f8cff"/><stop offset="0.55" stop-color="#46d3ee"/>',
-    '<stop offset="0.74" stop-color="#3ff0b4"/><stop offset="1" stop-color="#8dffa4"/>',
+    // Each curtain keeps to its own family of hues, apart from the others',
+    // so the shader (aurora-sky.ts) can tell them apart by colour and sway
+    // each on its own: the main curtain 131 to 169 degrees of hue, the
+    // ribbon above it 191 to 223, the veil at the top 264 to 331. Keep a new
+    // colour inside its curtain's range, or that curtain's characters will
+    // move with another's.
+    `<linearGradient id="mainLight" gradientUnits="userSpaceOnUse" x1="0" y1="130" x2="0" y2="540">`,
+    '<stop offset="0" stop-color="#31e8c2"/><stop offset="0.45" stop-color="#34eeae"/>',
+    '<stop offset="0.75" stop-color="#52f59c"/><stop offset="1" stop-color="#8dffa4"/>',
+    '</linearGradient>',
+    `<linearGradient id="highLight" gradientUnits="userSpaceOnUse" x1="0" y1="90" x2="0" y2="330">`,
+    '<stop offset="0" stop-color="#7aa2ff"/><stop offset="0.5" stop-color="#5fb0ff"/>',
+    '<stop offset="1" stop-color="#45c4f5"/>',
+    '</linearGradient>',
+    `<linearGradient id="veilLight" gradientUnits="userSpaceOnUse" x1="0" y1="40" x2="0" y2="190">`,
+    '<stop offset="0" stop-color="#ff6fb4"/><stop offset="0.5" stop-color="#e07cff"/>',
+    '<stop offset="1" stop-color="#b886ff"/>',
     '</linearGradient>',
     '<radialGradient id="glowGreen" cx="0.55" cy="0.42" r="0.5">',
     '<stop offset="0" stop-color="#1fb383" stop-opacity="0.2"/><stop offset="1" stop-color="#1fb383" stop-opacity="0"/>',
@@ -315,14 +324,7 @@ export function auroraScene() {
     '<radialGradient id="glowViolet" cx="0.3" cy="0.16" r="0.45">',
     '<stop offset="0" stop-color="#7a4dd8" stop-opacity="0.16"/><stop offset="1" stop-color="#7a4dd8" stop-opacity="0"/>',
     '</radialGradient>',
-    '<linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">',
-    '<stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.5" stop-color="#fff" stop-opacity="1"/>',
-    '<stop offset="1" stop-color="#fff" stop-opacity="0"/>',
-    '</linearGradient>',
     '<filter id="soft" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="28"/></filter>',
-    '<mask id="travel" maskUnits="userSpaceOnUse" x="-200" y="0" width="2000" height="1000">',
-    '<rect class="sweep" x="0" y="0" width="560" height="1000" fill="url(#beam)"/>',
-    '</mask>',
     '</defs>',
     '<!-- night sky and the glow the aurora casts -->',
     `<rect width="${W}" height="${H}" fill="url(#sky)"/>`,
@@ -333,13 +335,11 @@ export function auroraScene() {
     '<!-- stars -->',
     `<g>${stars()}</g>`,
     '<!-- the curtains -->',
-    `<g class="sway veil aurora">${rows(veil)}</g>`,
-    `<g class="sway high aurora"><g class="steady">${rows(high)}</g><g class="flicker">${rows(highAlt)}</g></g>`,
-    `<g class="sway main">`,
-    `<g class="aurora steady">${rows(main)}</g>`,
-    `<g class="aurora flicker">${rows(mainAlt)}</g>`,
-    `<g class="shine" mask="url(#travel)" opacity="0.55">${rows(main)}</g>`,
-    '</g>',
+    // Each curtain twice, the second dithered differently and fainter, for
+    // the density of light the original moving sky had at its fullest.
+    `<g class="veil aurora">${rows(veil)}</g>`,
+    `<g class="high aurora">${rows(high)}<g class="alt">${rows(highAlt)}</g></g>`,
+    `<g class="main aurora">${rows(main)}<g class="alt">${rows(mainAlt)}</g></g>`,
     '<!-- far range, near range, forest and snow -->',
     `<path d="${ridgeFill(far)}" fill="#050b12"/>`,
     `<g class="far">${rows(ridgeGrid(far, 0, 5))}</g>`,

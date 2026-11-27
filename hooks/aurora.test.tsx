@@ -132,9 +132,10 @@ test('the right-click menu offers the other wind mode', async ($, on) => {
   await onLink.unmount()
 })
 
-test('the backdrop draws the ASCII sky on desktop and mobile', async $ => {
+test('the backdrop draws the still ASCII sky under its GPU shader on desktop and mobile', async $ => {
   for (const surface of ['desktop', 'mobile'] as const) {
     const ui = await $.ui.mount({ ...BACKDROP, surface })
+    expect(await ui.find({ type: 'Shader' })).toBeDefined()
     expect(await ui.find({ type: 'Svg' })).toBeDefined()
     await ui.unmount()
   }

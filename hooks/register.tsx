@@ -381,14 +381,17 @@ export const register: Register = on => {
       return next(e)
     }
 
-    const { Svg } = $.ui.resolve(e)
+    const { Shader, Svg } = $.ui.resolve(e)
 
+    // The sky is a still picture, drawn once; the shader moves it on the
+    // GPU. Where no shader plays, the still sky shows on its own.
     return (
-      <Svg
-        source={SKY}
-        alt="An ASCII-art aurora borealis: green, teal and violet curtains of characters swaying over starlit ASCII mountains and pines"
-        isInteractive
-      />
+      <Shader module="./aurora-sky.ts">
+        <Svg
+          source={SKY}
+          alt="An ASCII-art aurora borealis: green, teal and violet curtains of characters over starlit ASCII mountains and pines"
+        />
+      </Shader>
     )
   })
 }
