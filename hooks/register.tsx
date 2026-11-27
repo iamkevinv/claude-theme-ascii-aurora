@@ -319,8 +319,10 @@ export const register: Register = on => {
 
     const result = await setLook($)
 
+    // Not drawn yet is normal: a terminal never draws themes, and the
+    // desktop app may attach after the session starts, when the theme draws.
     if (result !== undefined && !result.isDrawn) {
-      $.ui.log(`ascii-aurora: ${result.reason}`)
+      $.ui.log(`ascii-aurora: ${result.reason}`, { to: 'debug' })
     }
     if (weather.mode === 'gusty' && weather.hasSound) {
       startGusts($)
