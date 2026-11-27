@@ -232,3 +232,34 @@ Things to know when changing it:
 - **Experiments.** Earlier shader approaches are kept as tags:
   `experiment/shader-warping` (a wavy ripple that bent the characters) and
   `experiment/shader-rolling` (a lean that rippled like a rolling shutter).
+
+  <details>
+  <summary>Trying an experiment</summary>
+
+  To try one in the desktop app, install the plugin from your clone (above),
+  then check the tag out there:
+
+  ```bash
+  git switch --detach experiment/shader-warping
+  ```
+
+  The tags are older than the rename, so the plugin in them is still called
+  `ascii-aurora`, and `ascii-aurora-theme` won't load while one is checked
+  out. Install it under the old name, then run `/reload-plugins`:
+
+  ```bash
+  claude plugin install ascii-aurora@claude-theme-ascii-aurora
+  ```
+
+  To go back, switch to main, remove the old name, and run `/reload-plugins`
+  again:
+
+  ```bash
+  git switch main
+  ```
+
+  ```bash
+  claude plugin uninstall ascii-aurora@claude-theme-ascii-aurora
+  ```
+
+  </details>
