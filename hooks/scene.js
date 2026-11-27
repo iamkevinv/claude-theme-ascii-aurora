@@ -145,10 +145,13 @@ function drawCurtain(band, dither, seedShift = 0) {
 // whole star on its own clock by the cell it is in.
 const STAR_CELL = 32
 
+// The stars' tints: cool blue and ice, lilac, mint and a warm white.
+export const STAR_TINTS = ['#dbe9ff', '#c4defc', '#efe6ff', '#cdfbee', '#fff6e0']
+
 function stars() {
   const random = mulberry32(4242)
   const glyphs = ['.', '.', '.', '.', '.', "'", '`', '+', '+', '*']
-  const tints = ['#dbe9ff', '#c4defc', '#efe6ff', '#cdfbee', '#fff6e0']
+  const tints = STAR_TINTS
   let out = ''
   // Stars stop short of the ridge, so the tallest peaks are never taken
   // for stars.
@@ -228,8 +231,8 @@ function ridgeFill(r) {
 // twinkles. With `snowy`, the top third of each is white with snow.
 // The bulbs are bright and strongly coloured, unlike anything else under
 // the ridge line, which is how the shader finds them.
-const BULBS = ['#ff4d5e', '#ffd34d', '#4da6ff', '#ff7ad9', '#7dff6a']
-const STAR = '#ffd34d'
+export const BULBS = ['#ff4d5e', '#ffd34d', '#4da6ff', '#ff7ad9', '#7dff6a']
+export const STAR = '#ffd34d'
 
 function forest(festive, snowy) {
   const grid = blankGrid()

@@ -172,7 +172,8 @@ conversation and choosing **Wind: make it gusty / steady**.
 | `.claude-plugin/marketplace.json` | Makes this repository a marketplace, so it installs with one line |
 | `.claude-plugin/icon.png` | The plugin's icon, made by `scripts/make-icon.mjs` |
 | `hooks/hooks.json` | Points Claude Code at `register.tsx` |
-| `hooks/register.tsx` | Palette for both modes, message styles, sound and wind modes, the three commands, the right-click item, the snow roll, the Christmas check, and the backdrop |
+| `hooks/register.tsx` | Message styles, sound and wind modes, the three commands, the right-click item, the snow roll, the Christmas check, and the backdrop |
+| `hooks/palette.js` | The app's colours for both modes: roles, surfaces, text and messages |
 | `hooks/scene.js` | Generates the still ASCII sky as one SVG, night and day, with the optional Christmas lights and snow caps. It's seeded, so the sky is the same every time |
 | `hooks/aurora-sky.ts` | The GPU shader that animates the sky in the desktop app. `claude plugin validate .` prints its cost |
 | `hooks/season.js` | Works out the cold months from the time zone and the month |
@@ -180,6 +181,10 @@ conversation and choosing **Wind: make it gusty / steady**.
 | `hooks/*.test.ts(x)` | Tests, run with `claude plugin test` |
 | `scripts/preview-scene.mjs` | Writes `preview/scene.svg`, for tuning the sky in a browser |
 | `scripts/make-icon.mjs` | Draws the icon (the three curtains as pixel rays inside the message frame) and renders it to `.claude-plugin/icon.png` with headless Chrome |
+| `scripts/check-design.mjs` | Checks that every colour in `DESIGN.md` is the code's own |
+| `DESIGN.md` | The look, as design tokens and guidance, in [Google's DESIGN.md format](https://github.com/google-labs-code/design.md/blob/main/docs/spec.md) |
+| `ARCHITECTURE.md` | How it's built, and the approaches tried and dropped |
+| `AGENTS.md` | Commands and rules for anyone changing it, people and coding agents alike. Claude Code reads it as the project's instructions, so there's no `CLAUDE.md` |
 | `docs/images/` | The gallery above |
 | `.claude-plugin/types/` | API types Claude Code writes for editors and `tsc`. Generated, not committed |
 | `LICENSE` | The licence: CC BY-NC-SA 4.0 |
@@ -192,6 +197,10 @@ claude plugin validate .
 
 ```bash
 claude plugin test .
+```
+
+```bash
+node scripts/check-design.mjs
 ```
 
 ```bash
@@ -216,18 +225,11 @@ claude plugin marketplace add .
 claude plugin install ascii-aurora-theme@claude-theme-ascii-aurora
 ```
 
-Things to know when changing it:
+Before changing anything, read [AGENTS.md](AGENTS.md): the commands to run
+and the rules that aren't obvious from the code, such as keeping each
+curtain in its hues and the ground muted. [ARCHITECTURE.md](ARCHITECTURE.md)
+explains how the sky works, and [DESIGN.md](DESIGN.md) holds the look.
 
-- **Sound.** `$.theme.set` rejects sound that is out of range or too long to
-  render: each note's attack plus release can be at most 4 seconds. Run the
-  tests after changing the sound; they fail with the engine's reason.
-- **Curtain colours.** Each curtain keeps to its own range of hues (main 115°
-  to 178°, ribbon 182° to 238°, veil 242° to 345°), so the shader can tell
-  them apart. A colour outside its range makes that curtain's characters move
-  with another's.
-- **Under the ridge,** the shader takes anything bright and strongly coloured
-  for a Christmas bulb and twinkles it. Keep the ground, mountains and pines
-  muted.
 - **Experiments.** Earlier shader approaches are kept as tags:
   `experiment/shader-warping` (a wavy ripple that bent the characters) and
   `experiment/shader-rolling` (a lean that rippled like a rolling shutter).
@@ -272,8 +274,8 @@ before it's merged.
 1. Fork the repository and make a branch for your change.
 2. Try the change in the desktop app from your fork's folder, as
    [Working on it](#working-on-it) describes, in both light and dark mode.
-3. Run `claude plugin validate .` and `claude plugin test .`. Both should
-   pass.
+3. Run the checks in [AGENTS.md](AGENTS.md#commands): validate, the tests,
+   the DESIGN.md check and the type-check. All should pass.
 4. Open a pull request that says what you changed and why. If it changes how
    the theme looks, add a screenshot.
 
