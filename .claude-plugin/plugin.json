@@ -1,5 +1,10 @@
 {
   "name": "ascii-aurora-theme",
   "version": "0.4.2",
-  "description": "An ASCII aurora borealis over ASCII mountains, by night in dark mode and by day in light mode, with aurora-coloured text and code."
+  "description": "An ASCII aurora borealis over ASCII mountains, by night in dark mode and by day in light mode, with aurora-coloured text and code.",
+  "author": { "name": "Kevin Vanderbeken", "url": "https://github.com/iamkevinv" },
+  "homepage": "https://github.com/iamkevinv/claude-theme-ascii-aurora",
+  "repository": "https://github.com/iamkevinv/claude-theme-ascii-aurora",
+  "license": "CC-BY-NC-SA-4.0",
+  "keywords": ["theme", "aurora", "ascii", "dark-mode", "light-mode", "snow", "christmas", "ambient-sound"]
 }

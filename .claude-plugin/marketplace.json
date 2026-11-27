@@ -1,5 +1,6 @@
 {
   "name": "claude-theme-ascii-aurora",
-  "owner": { "name": "Kevin Vanderbeken" },
+  "description": "The ASCII Aurora theme for the Claude desktop app.",
+  "owner": { "name": "Kevin Vanderbeken", "url": "https://github.com/iamkevinv" },
   "plugins": [{ "name": "ascii-aurora-theme", "source": "./" }]
 }
