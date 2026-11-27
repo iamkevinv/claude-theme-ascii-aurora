@@ -41,9 +41,9 @@ function world(on: On, refuse?: (look: ThemeSetArgs) => string | undefined, stor
   return { sets, logs, store }
 }
 
-// /wind as the person types it.
+// /ascii-aurora-wind as the person types it.
 const wind = (args = '') =>
-  ({ command: 'wind', args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 80 } }) as const
+  ({ command: 'ascii-aurora-wind', args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 80 } }) as const
 
 // The brown-noise wind layer's gain in a look: how windy it is.
 const windOf = (look: ThemeSetArgs | undefined) => {
@@ -97,7 +97,7 @@ test('gusty wind fades between windy and almost-still spells', async ($, on) => 
   }
 })
 
-test('/wind switches the mode and remembers it', async ($, on) => {
+test('/ascii-aurora-wind switches the mode and remembers it', async ($, on) => {
   mock.clock(on)
   const { store } = world(on)
   await $.session.start(START)
@@ -189,5 +189,37 @@ test('the lights go up around midnight on Christmas Eve', async ($, on) => {
   expect(await hasLights(ui)).toBe(false)
   await clock.advance(20 * 60 * 1000)
   expect(await hasLights(ui)).toBe(true)
+  await ui.unmount()
+})
+
+test('the shader is told whether it snows this session', async ($, on) => {
+  world(on)
+  await $.session.start(START)
+
+  const ui = await $.ui.mount({ ...BACKDROP, surface: 'desktop' })
+  const shader = await ui.find({ type: 'Shader' })
+  expect([0, 1]).toContain((shader?.props.values as { snow?: number } | undefined)?.snow)
+  await ui.unmount()
+})
+
+test('/ascii-aurora-snow lets it snow, or stops it, for the session', async ($, on) => {
+  world(on)
+  await $.session.start(START)
+  const snow = (args = '') =>
+    ({ command: 'ascii-aurora-snow', args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 80 } }) as const
+  const ui = await $.ui.mount({ ...BACKDROP, surface: 'desktop' })
+  const snowing = async () => ((await ui.find({ type: 'Shader' }))?.props.values as { snow?: number } | undefined)?.snow
+
+  expect((await $.command.run(snow('on'))).text).toContain('Snow is falling')
+  expect(await snowing()).toBe(1)
+
+  expect((await $.command.run(snow('off'))).text).toContain('stopped')
+  expect(await snowing()).toBe(0)
+
+  await $.command.run(snow())
+  expect(await snowing()).toBe(1)
+
+  expect((await $.command.run(snow('blizzard'))).text).toContain('It is snowing')
+  expect(await snowing()).toBe(1)
   await ui.unmount()
 })
