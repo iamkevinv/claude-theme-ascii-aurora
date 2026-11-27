@@ -1,8 +1,9 @@
 # ASCII Aurora
 
-A dark theme for the Claude desktop app, built as a Claude Code mod. An aurora
-borealis made entirely of ASCII characters sways behind the conversation, over
-starlit ASCII mountains and a pine forest. Text and code take the aurora's
+A theme for the Claude desktop app, built as a Claude Code mod, for both light
+and dark mode. An aurora borealis made entirely of ASCII characters sways
+behind the conversation, over ASCII mountains and a pine forest: under a
+starry night sky in dark mode, and a daytime aurora sky in light mode. Text and code take the aurora's
 colours, and an optional ambient sound brings wind, high bells and low notes.
 
 Themes draw in the desktop and mobile apps only. The terminal and editors
@@ -59,12 +60,16 @@ Once installed it loads in every new session, desktop app included.
   Type `/ascii-aurora-christmas` to hang them on any day, or take them
   down, for the rest of the session (`/ascii-aurora-christmas on`,
   `/ascii-aurora-christmas off`).
-- **Colours.** Dark only: near-black navy surfaces and icy mint text. Code
-  uses the aurora's colours: teal keywords, green strings, violet literals,
-  magenta names, gold variables.
+- **Colours.** Dark mode has near-black navy surfaces and icy mint text.
+  Light mode has pale periwinkle surfaces and deep indigo text, with a
+  daytime sky: periwinkle overhead, lightening to the horizon, and the
+  aurora laid on as added light, so it shows pale and bright in blue-green,
+  light blue and lilac. Either way, code uses the aurora's colours: teal
+  keywords, green strings, violet literals, magenta names, gold variables.
 - **Messages.** Your messages sit in an ASCII box (`+----+`) with green lines
-  and violet corners. Claude's replies sit on a dark panel with only the
-  corners marked. All message text is monospace.
+  and violet corners. Claude's replies sit on a plain panel, dark or light to
+  match the mode, with only the corners marked. All message text is
+  monospace.
 - **Sound.** Off until you press the speaker in the session's title bar.
   - **Wind** has two modes. *Steady* is always there. *Gusty* comes in windy
     and calm spells of random length, swelling and ebbing over 30 to 48

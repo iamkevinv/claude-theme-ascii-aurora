@@ -4,7 +4,7 @@ import { expect, mock, test } from 'claude-code/testing'
 const BACKDROP = {
   plugin: 'ascii-aurora',
   component: 'Backdrop',
-  props: { scene: 'ascii-aurora', plugin: 'ascii-aurora', glass: { blur: 10, tint: '#060b13', opacity: 0.7 } },
+  props: { scene: 'ascii-aurora', plugin: 'ascii-aurora', glass: { blur: 10, opacity: 0.7 } },
 } as const
 
 const START = { cwd: '/tmp', surface: 'desktop', isInteractive: true } as const
@@ -52,7 +52,7 @@ const windOf = (look: ThemeSetArgs | undefined) => {
   return layer !== undefined && 'gain' in layer ? (layer.gain ?? 0) : -1
 }
 
-test('session start sets the dark aurora look once, with steady wind', async ($, on) => {
+test('session start sets the aurora look once, in both modes, with steady wind', async ($, on) => {
   const { sets, logs } = world(on)
 
   await $.session.start(START)
@@ -60,8 +60,14 @@ test('session start sets the dark aurora look once, with steady wind', async ($,
   expect(logs).toEqual([])
   expect(sets.length).toBe(1)
   const look = sets[0]!
-  expect(look.overrideColorScheme).toBe('dark')
-  expect(look.backdrop).toEqual({ scene: 'ascii-aurora', glass: { blur: 10, tint: '#060b13', opacity: 0.7 } })
+  // It follows the person's own light or dark mode, with colours for each.
+  expect(look.overrideColorScheme).toBeUndefined()
+  expect(Object.keys(look.colors?.inputs ?? {}).sort()).toEqual(['dark', 'light'])
+  for (const mode of ['light', 'dark'] as const) {
+    expect(look.colors?.inputs[mode]?.['bg-user-message']).toBeDefined()
+    expect(look.colors?.inputs[mode]?.['text-assistant-message']).toBeDefined()
+  }
+  expect(look.backdrop).toEqual({ scene: 'ascii-aurora', glass: { blur: 10, opacity: 0.7 } })
   expect(look.style?.UserMessage).toBeDefined()
   expect(windOf(look)).toBe(0.16)
 })
@@ -130,6 +136,15 @@ test('the right-click menu offers the other wind mode', async ($, on) => {
   })
   expect(await onLink.find({ type: 'Button', key: 'wind' })).toBeUndefined()
   await onLink.unmount()
+})
+
+test('the sky has a daytime look for light mode and a night look for dark', async $ => {
+  const ui = await $.ui.mount({ ...BACKDROP, surface: 'desktop' })
+  const sky = String((await ui.find({ type: 'Svg' }))?.props.source ?? '')
+  expect(sky).toContain('@media (prefers-color-scheme: light)')
+  expect(sky).toContain('url(#skyDay)')
+  expect(sky).toContain('mix-blend-mode: plus-lighter')
+  await ui.unmount()
 })
 
 test('the backdrop draws the still ASCII sky under its GPU shader on desktop and mobile', async $ => {

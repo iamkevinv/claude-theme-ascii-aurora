@@ -3,6 +3,7 @@ import type {
   Register,
   ThemeMessageRule,
   ThemeResult,
+  ThemeColors,
   ThemeSetArgs,
   ThemeSound,
   ThemeStyle,
@@ -13,13 +14,27 @@ import { makeColors } from './make-colors.js'
 import { auroraScene } from './scene.js'
 import { localTimeZone, shouldSnow } from './season.js'
 
-// ASCII aurora: a polar night. Surfaces are deep blue-black, text is icy mint,
-// and the five roles are the aurora's own colours, so code comes out in them:
-// keywords teal, strings green, literals violet, names magenta, variables gold.
+// ASCII aurora, by night and by day. In dark mode a polar night: surfaces
+// deep blue-black, text icy mint. In light mode a daytime aurora sky:
+// surfaces pale periwinkle, text deep indigo. Either way the five roles are
+// the aurora's own colours, so code comes out in them: keywords teal,
+// strings green, literals violet, names magenta, variables gold.
 const { theme, problems } = makeColors({
   label: 'ASCII Aurora',
-  only: 'dark',
   roles: { accent: '#3fe0c5', danger: '#ff6b9a', success: '#7cf29a', warning: '#f6c667', pro: '#b48cff' },
+  light: {
+    gray: {
+      anchors: {
+        'surface-0': '#e3e6f4',
+        'surface-1': '#eceef9',
+        'surface-2': '#f6f7fd',
+        'text-primary': '#191d3a',
+        'text-secondary': '#363b62',
+        'text-muted': '#555a82',
+      },
+    },
+    git: { added: '#1f8a5b', removed: '#c23a63', modified: '#a8780e', merged: '#7a4fd0' },
+  },
   dark: {
     gray: {
       anchors: {
@@ -36,17 +51,41 @@ const { theme, problems } = makeColors({
   },
 })
 
+// The four message colours, by mode, which `style` names below so the
+// messages follow light and dark.
+const COLORS: ThemeColors = {
+  ...theme,
+  inputs: {
+    light: {
+      ...theme.inputs.light,
+      'bg-user-message': '#eef0fb',
+      'text-user-message': '#191d3a',
+      'bg-assistant-message': '#f7f8fd',
+      'text-assistant-message': '#1f2340',
+    },
+    dark: {
+      ...theme.inputs.dark,
+      'bg-user-message': '#0c1e26',
+      'text-user-message': '#eafff8',
+      'bg-assistant-message': '#08111a',
+      'text-assistant-message': '#d6ebe5',
+    },
+  },
+}
+
 const SCENE = 'ascii-aurora'
 const SKY = auroraScene()
 // On Christmas Eve and Christmas Day, by the computer's own calendar, every
 // pine is hung with coloured lights.
 const FESTIVE_SKY = auroraScene({ festive: true })
 
-type Hex = `#${string}`
+type Paint = NonNullable<ThemeMessageRule['backgroundColor']>
 
 // A box drawn like ASCII art: +-----+ with the corners in their own colour.
 // The drawing is cut in nine, so the corners stay put and the edges stretch.
-function asciiBox(body: Hex, corner: Hex, line?: Hex): NonNullable<ThemeMessageRule['fill']> {
+// Its colours are named ones, which follow light and dark: each contrasts
+// at least 3:1 with the message's words in both modes, as the app requires.
+function asciiBox(body: Paint, corner: Paint, line?: Paint): NonNullable<ThemeMessageRule['fill']> {
   return {
     vector: {
       viewBox: 48,
@@ -66,29 +105,29 @@ function asciiBox(body: Hex, corner: Hex, line?: Hex): NonNullable<ThemeMessageR
 
 const STYLE: ThemeStyle = {
   Text: { fontFamily: ['mono'], fontSize: 14, lineHeight: 22 },
-  Heading: { fontFamily: ['mono'], color: '#7df5c4', fontWeight: 'bold', letterSpacing: 0.5 },
-  // Your messages: a full ASCII frame, aurora-green lines, violet corners.
+  Heading: { fontFamily: ['mono'], color: 'text-accent', fontWeight: 'bold', letterSpacing: 0.5 },
+  // Your messages: a full ASCII frame, aurora-teal lines, violet corners.
   UserMessage: {
-    color: '#eafff8',
-    backgroundColor: '#0c1e26',
-    fill: asciiBox('#0c1e26', '#7a68e8', '#1a7a60'),
+    color: 'text-user-message',
+    backgroundColor: 'bg-user-message',
+    fill: asciiBox('bg-user-message', 'fill-pro', 'fill-accent'),
     paddingX: 18,
     paddingY: 13,
     shadow: { blur: 18, color: '#2ee6a02e' },
   },
-  // Claude's replies: a dark pane with only its corners marked.
+  // Claude's replies: a plain pane with only its corners marked, softly.
   AssistantMessage: {
-    color: '#d6ebe5',
-    backgroundColor: '#08111a',
-    fill: asciiBox('#08111a', '#6655c0'),
+    color: 'text-assistant-message',
+    backgroundColor: 'bg-assistant-message',
+    fill: asciiBox('bg-assistant-message', 'border-pro'),
     paddingX: 18,
     paddingY: 13,
   },
   ToolUse: {
-    color: '#a8eedb',
+    color: 'text-accent',
     fontFamily: ['code'],
-    backgroundColor: '#08121b',
-    borderColor: '#1d3a42',
+    backgroundColor: 'surface-1',
+    borderColor: 'border-accent',
     borderWidth: 1,
     radius: 2,
     paddingX: 10,
@@ -194,9 +233,10 @@ const CUES: ThemeSound['cues'] = {
 }
 
 const BASE: ThemeSetArgs = {
-  colors: theme,
-  overrideColorScheme: 'dark',
-  backdrop: { scene: SCENE, glass: { blur: 10, tint: '#060b13', opacity: 0.7 } },
+  colors: COLORS,
+  // No tint: the frosted panels take the app's own panel colour, which
+  // follows light and dark.
+  backdrop: { scene: SCENE, glass: { blur: 10, opacity: 0.7 } },
 }
 
 // A fade between spells: this many steps, this far apart, so 30 to 48
