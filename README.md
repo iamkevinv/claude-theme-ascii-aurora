@@ -36,13 +36,15 @@ Once installed it loads in every new session, desktop app included.
 
 ## What it does
 
-- **Backdrop.** Three curtains of `. ' : ; ! | l I #` rays, coloured by
-  altitude (green low, then teal, violet and magenta high). The sky is
-  drawn once as a still picture, and a small GPU shader brings it to life:
-  the curtains slide and lean as one sheet, in whole pixels so the
-  characters stay sharp, the light breathes and shimmers, a band of light
-  travels along them, and the stars twinkle. With reduced motion turned on, or on the mobile app,
-  the still sky shows.
+- **Backdrop.** Three curtains of `. ' : ; ! | l I #` rays, each in its own
+  colour family: green and teal low, cyan and blue above, violet and
+  magenta highest. The sky is drawn once as a still picture, and a small
+  GPU shader brings it to life: it tells the curtains apart by colour and
+  slides each on its own clock (34, 43 and 57 seconds each way, the middle
+  one against the others), in whole pixels so the characters stay sharp.
+  The stars stay put and twinkle, the light breathes and shimmers, and a
+  band of light travels along the curtains. With reduced motion turned on,
+  or on the mobile app, the still sky shows.
 - **Colours.** Dark only: near-black navy surfaces and icy mint text. Code
   uses the aurora's colours: teal keywords, green strings, violet literals,
   magenta names, gold variables.

@@ -1,8 +1,8 @@
 // scene.js: the ASCII aurora backdrop, drawn as one SVG string.
 //
-// Everything is glyphs on a 200 x 66 character grid: three aurora curtains
-// whose colour follows altitude (green low, teal, then violet and magenta
-// high, as the real sky does), a field of twinkling stars, and two ASCII
+// Everything is glyphs on a 200 x 66 character grid: three aurora curtains,
+// each in its own colour family (green and teal low, cyan and blue above,
+// violet and magenta highest, as the real sky's are), a field of stars, and two ASCII
 // mountain ridges with a pine forest along the near one. The noise is
 // seeded, so the sky is the same every time.
 
@@ -272,10 +272,10 @@ function snow() {
 // in the style: the app's checks read their words too.
 const STYLE = `
 text { font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "DejaVu Sans Mono", monospace; font-size: ${FONT_SIZE}px; white-space: pre; }
-.aurora { font-weight: 700; fill: url(#altitude); }
-.main { opacity: 0.95; }
-.high { opacity: 0.7; }
-.veil { opacity: 0.42; }
+.aurora { font-weight: 700; }
+.main { opacity: 0.95; fill: url(#mainLight); }
+.high { opacity: 0.7; fill: url(#highLight); }
+.veil { opacity: 0.42; fill: url(#veilLight); }
 .alt { opacity: 0.45; }
 .tw { opacity: 0.85; }
 .far { fill: #4f8079; }
@@ -300,11 +300,23 @@ export function auroraScene() {
     '<stop offset="0" stop-color="#020409"/><stop offset="0.5" stop-color="#050b14"/>',
     '<stop offset="0.82" stop-color="#08151d"/><stop offset="1" stop-color="#0a1a1f"/>',
     '</linearGradient>',
-    // Colour by altitude: magenta at the top of the sky down to green at the hem.
-    `<linearGradient id="altitude" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="520">`,
-    '<stop offset="0" stop-color="#ff5fa8"/><stop offset="0.18" stop-color="#c77dff"/>',
-    '<stop offset="0.38" stop-color="#7f8cff"/><stop offset="0.55" stop-color="#46d3ee"/>',
-    '<stop offset="0.74" stop-color="#3ff0b4"/><stop offset="1" stop-color="#8dffa4"/>',
+    // Each curtain keeps to its own family of hues, apart from the others',
+    // so the shader (aurora-sky.ts) can tell them apart by colour and sway
+    // each on its own: the main curtain 131 to 169 degrees of hue, the
+    // ribbon above it 191 to 223, the veil at the top 264 to 331. Keep a new
+    // colour inside its curtain's range, or that curtain's characters will
+    // move with another's.
+    `<linearGradient id="mainLight" gradientUnits="userSpaceOnUse" x1="0" y1="130" x2="0" y2="540">`,
+    '<stop offset="0" stop-color="#31e8c2"/><stop offset="0.45" stop-color="#34eeae"/>',
+    '<stop offset="0.75" stop-color="#52f59c"/><stop offset="1" stop-color="#8dffa4"/>',
+    '</linearGradient>',
+    `<linearGradient id="highLight" gradientUnits="userSpaceOnUse" x1="0" y1="90" x2="0" y2="330">`,
+    '<stop offset="0" stop-color="#7aa2ff"/><stop offset="0.5" stop-color="#5fb0ff"/>',
+    '<stop offset="1" stop-color="#45c4f5"/>',
+    '</linearGradient>',
+    `<linearGradient id="veilLight" gradientUnits="userSpaceOnUse" x1="0" y1="40" x2="0" y2="190">`,
+    '<stop offset="0" stop-color="#ff6fb4"/><stop offset="0.5" stop-color="#e07cff"/>',
+    '<stop offset="1" stop-color="#b886ff"/>',
     '</linearGradient>',
     '<radialGradient id="glowGreen" cx="0.55" cy="0.42" r="0.5">',
     '<stop offset="0" stop-color="#1fb383" stop-opacity="0.2"/><stop offset="1" stop-color="#1fb383" stop-opacity="0"/>',
