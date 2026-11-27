@@ -37,8 +37,8 @@ const { theme, problems } = makeColors({
 
 const SCENE = 'ascii-aurora'
 const SKY = auroraScene()
-// On Christmas Eve and Christmas Day, by the computer's own calendar, a few
-// of the pines are hung with coloured lights.
+// On Christmas Eve and Christmas Day, by the computer's own calendar, every
+// pine is hung with coloured lights.
 const FESTIVE_SKY = auroraScene({ festive: true })
 
 type Hex = `#${string}`
@@ -417,7 +417,7 @@ export const register: Register = on => {
           source={christmas.on ? FESTIVE_SKY : SKY}
           alt={
             christmas.on
-              ? 'An ASCII-art aurora borealis over starlit ASCII mountains and pines, a few of them hung with coloured Christmas lights'
+              ? 'An ASCII-art aurora borealis over starlit ASCII mountains and pines hung with coloured Christmas lights'
               : 'An ASCII-art aurora borealis: green, teal and violet curtains of characters over starlit ASCII mountains and pines'
           }
         />

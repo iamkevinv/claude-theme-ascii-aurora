@@ -159,7 +159,7 @@ async function hasLights(ui: { find: (query: { type: string }) => Promise<{ prop
 }
 
 for (const [day, name] of [[24, 'Christmas Eve'], [25, 'Christmas Day']] as const) {
-  test(`on ${name} a few pines have lights`, async ($, on) => {
+  test(`on ${name} every pine has lights`, async ($, on) => {
     mock.clock(on, { now: new Date(2026, 11, day, 9, 30).getTime() })
     world(on)
     await $.session.start(START)

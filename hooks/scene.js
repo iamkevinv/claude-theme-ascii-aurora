@@ -223,8 +223,9 @@ function ridgeFill(r) {
   return `${d}L${W} ${H}L0 ${H}Z`
 }
 
-// The pines along the near ridge. With `festive`, a few of them are hung
-// with coloured lights, a gold star on top, which the shader twinkles.
+// The pines along the near ridge. With `festive`, every one of them is
+// hung with coloured lights and a gold star on top, which the shader
+// twinkles.
 // The bulbs are bright and strongly coloured, unlike anything else under
 // the ridge line, which is how the shader finds them.
 const BULBS = ['#ff4d5e', '#ffd34d', '#4da6ff', '#ff7ad9', '#7dff6a']
@@ -266,9 +267,7 @@ function forest(festive) {
       grid[row][col] = ' '
       lights += `<text x="${col * CW + CW / 2}" y="${baseline(row)}" text-anchor="middle" fill="${colour}">${glyph}</text>`
     }
-    // About one tree in three, the taller ones more often.
     for (const { c: centre, trunk, tiers } of trees) {
-      if (pick() > (tiers >= 3 ? 0.5 : 0.25)) continue
       const top = trunk - tiers - 1
       bulb(top, centre, '*', STAR)
       for (let k = 1; k <= tiers; k++) {

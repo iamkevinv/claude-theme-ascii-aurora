@@ -229,7 +229,7 @@ export default shader({
       const rebuilt = vec3(back + aurora + stars * twinkle)
       const lit = vec3(mix(vec3(here.rgb), rebuilt, sky))
 
-      // At Christmas scene.js hangs lights on a few of the pines: under the
+      // At Christmas scene.js hangs lights on the pines: under the
       // ridge line nothing else is so bright and so strongly coloured. Each
       // bulb glows up and down on its own clock, once every 2 to 5 seconds,
       // counted by its character cell (8 by 15 units, rows ending 16 down).
