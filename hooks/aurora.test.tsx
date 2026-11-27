@@ -2,9 +2,9 @@ import type { On, ThemeSetArgs } from 'claude-code'
 import { expect, mock, test } from 'claude-code/testing'
 
 const BACKDROP = {
-  plugin: 'ascii-aurora',
+  plugin: 'ascii-aurora-theme',
   component: 'Backdrop',
-  props: { scene: 'ascii-aurora', plugin: 'ascii-aurora', glass: { blur: 10, opacity: 0.7 } },
+  props: { scene: 'ascii-aurora-theme', plugin: 'ascii-aurora-theme', glass: { blur: 10, opacity: 0.7 } },
 } as const
 
 const START = { cwd: '/tmp', surface: 'desktop', isInteractive: true } as const
@@ -67,7 +67,7 @@ test('session start sets the aurora look once, in both modes, with steady wind',
     expect(look.colors?.inputs[mode]?.['bg-user-message']).toBeDefined()
     expect(look.colors?.inputs[mode]?.['text-assistant-message']).toBeDefined()
   }
-  expect(look.backdrop).toEqual({ scene: 'ascii-aurora', glass: { blur: 10, opacity: 0.7 } })
+  expect(look.backdrop).toEqual({ scene: 'ascii-aurora-theme', glass: { blur: 10, opacity: 0.7 } })
   expect(look.style?.UserMessage).toBeDefined()
   expect(windOf(look)).toBe(0.16)
 })
@@ -122,14 +122,14 @@ test('the right-click menu offers the other wind mode', async ($, on) => {
   const { store } = world(on)
   await $.session.start(START)
 
-  const menu = await $.ui.mount({ plugin: 'ascii-aurora', surface: 'desktop', component: 'ContextMenu', props: {} })
+  const menu = await $.ui.mount({ plugin: 'ascii-aurora-theme', surface: 'desktop', component: 'ContextMenu', props: {} })
   expect(await menu.find({ type: 'Button', text: 'gusty' })).toBeDefined()
   await menu.press({ key: 'wind' })
   expect(store.get('wind')).toBe('gusty')
   await menu.unmount()
 
   const onLink = await $.ui.mount({
-    plugin: 'ascii-aurora',
+    plugin: 'ascii-aurora-theme',
     surface: 'desktop',
     component: 'ContextMenu',
     props: { link: { href: 'https://example.com' } },

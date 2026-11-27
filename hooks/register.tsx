@@ -73,7 +73,7 @@ const COLORS: ThemeColors = {
   },
 }
 
-const SCENE = 'ascii-aurora'
+const SCENE = 'ascii-aurora-theme'
 // The sky in each of its four states: on Christmas Eve and Christmas Day,
 // by the computer's own calendar, every pine is hung with coloured lights;
 // while it snows, the top third of each pine is white with snow.
@@ -287,7 +287,7 @@ async function setLook($: EngineInterface): Promise<ThemeResult | undefined> {
     try {
       return await $.theme.set(look)
     } catch (error) {
-      $.ui.log(`ascii-aurora: ${String(error)}`)
+      $.ui.log(`ascii-aurora-theme: ${String(error)}`)
       if (index === 0 && weather.hasSound) {
         weather.hasSound = false
         stopGusts()
@@ -438,7 +438,7 @@ export const register: Register = on => {
     // Not drawn yet is normal: a terminal never draws themes, and the
     // desktop app may attach after the session starts, when the theme draws.
     if (result !== undefined && !result.isDrawn) {
-      $.ui.log(`ascii-aurora: ${result.reason}`, { to: 'debug' })
+      $.ui.log(`ascii-aurora-theme: ${result.reason}`, { to: 'debug' })
     }
     if (weather.mode === 'gusty' && weather.hasSound) {
       startGusts($)

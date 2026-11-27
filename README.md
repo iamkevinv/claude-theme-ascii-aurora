@@ -34,7 +34,7 @@ and your computer needs a git login for github.com (an SSH key, or
 At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install ascii-aurora --marketplace iamkevinv/claude-theme-ascii-aurora
+/plugin install ascii-aurora-theme --marketplace iamkevinv/claude-theme-ascii-aurora
 ```
 
 Answer `y` to add the marketplace, then press Enter to install for your user.
@@ -42,7 +42,7 @@ Answer `y` to add the marketplace, then press Enter to install for your user.
 Or from a shell:
 
 ```bash
-claude plugin install ascii-aurora --marketplace iamkevinv/claude-theme-ascii-aurora
+claude plugin install ascii-aurora-theme --marketplace iamkevinv/claude-theme-ascii-aurora
 ```
 
 In the Claude desktop app, where `/plugin` doesn't run: click **+** next to
@@ -53,7 +53,22 @@ Once installed it loads in every new session, desktop app included. To update
 to the latest version:
 
 ```bash
-claude plugin update ascii-aurora@claude-theme-ascii-aurora
+claude plugin update ascii-aurora-theme@claude-theme-ascii-aurora
+```
+
+If you installed it before it was renamed, under the name `ascii-aurora`,
+updating won't carry it over. Uninstall the old name and install the new one:
+
+```bash
+claude plugin uninstall ascii-aurora@claude-theme-ascii-aurora
+```
+
+```bash
+claude plugin marketplace update claude-theme-ascii-aurora
+```
+
+```bash
+claude plugin install ascii-aurora-theme@claude-theme-ascii-aurora
 ```
 
 ## Features
@@ -199,7 +214,7 @@ claude plugin marketplace add .
 ```
 
 ```bash
-claude plugin install ascii-aurora@claude-theme-ascii-aurora
+claude plugin install ascii-aurora-theme@claude-theme-ascii-aurora
 ```
 
 Things to know when changing it:
