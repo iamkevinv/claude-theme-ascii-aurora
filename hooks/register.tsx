@@ -74,10 +74,22 @@ const COLORS: ThemeColors = {
 }
 
 const SCENE = 'ascii-aurora'
-const SKY = auroraScene()
-// On Christmas Eve and Christmas Day, by the computer's own calendar, every
-// pine is hung with coloured lights.
-const FESTIVE_SKY = auroraScene({ festive: true })
+// The sky in each of its four states: on Christmas Eve and Christmas Day,
+// by the computer's own calendar, every pine is hung with coloured lights;
+// while it snows, the top third of each pine is white with snow.
+const SKIES = {
+  plain: auroraScene(),
+  festive: auroraScene({ festive: true }),
+  snowy: auroraScene({ snowy: true }),
+  festiveSnowy: auroraScene({ festive: true, snowy: true }),
+}
+
+function sky(festive: boolean, snowy: boolean): string {
+  if (festive) {
+    return snowy ? SKIES.festiveSnowy : SKIES.festive
+  }
+  return snowy ? SKIES.snowy : SKIES.plain
+}
 
 type Paint = NonNullable<ThemeMessageRule['backgroundColor']>
 
@@ -543,7 +555,7 @@ export const register: Register = on => {
     return (
       <Shader module="./aurora-sky.ts" values={{ snow: season.snowing ? 1 : 0 }}>
         <Svg
-          source={lightsUp() ? FESTIVE_SKY : SKY}
+          source={sky(lightsUp(), season.snowing)}
           alt={
             lightsUp()
               ? 'An ASCII-art aurora borealis over starlit ASCII mountains and pines hung with coloured Christmas lights'

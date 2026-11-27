@@ -225,13 +225,13 @@ function ridgeFill(r) {
 
 // The pines along the near ridge. With `festive`, every one of them is
 // hung with coloured lights and a gold star on top, which the shader
-// twinkles.
+// twinkles. With `snowy`, the top third of each is white with snow.
 // The bulbs are bright and strongly coloured, unlike anything else under
 // the ridge line, which is how the shader finds them.
 const BULBS = ['#ff4d5e', '#ffd34d', '#4da6ff', '#ff7ad9', '#7dff6a']
 const STAR = '#ffd34d'
 
-function forest(festive) {
+function forest(festive, snowy) {
   const grid = blankGrid()
   const random = mulberry32(909)
   const trees = []
@@ -277,7 +277,26 @@ function forest(festive) {
       }
     }
   }
-  return { grid, lights }
+
+  // When it snows, the top third of each pine's branches (counting its
+  // tip) is white with snow: those characters move to a grid of their own,
+  // drawn in snow's colour. Bulbs and stars stay as they are.
+  const caps = blankGrid()
+  if (snowy) {
+    for (const { c: centre, trunk, tiers } of trees) {
+      const top = trunk - tiers - 1
+      const snowRows = Math.ceil((tiers + 1) / 3)
+      for (let k = 0; k < snowRows; k++) {
+        for (let x = -k; x <= k; x++) {
+          const col = centre + x
+          if (col < 0 || col >= COLS || grid[top + k][col] === ' ') continue
+          caps[top + k][col] = grid[top + k][col]
+          grid[top + k][col] = ' '
+        }
+      }
+    }
+  }
+  return { grid, caps, lights }
 }
 
 function snow() {
@@ -304,7 +323,10 @@ function snow() {
 // laid on as added light (plus-lighter), as daytime aurora is, so it shows
 // pale and bright: blue-green, light blue and lilac. The added colours keep
 // each curtain's family of hues, so the shader tells them apart in either
-// mode. The mountains turn to slate with snow-lit ridges and navy pines.
+// mode. The mountains turn to slate with snow-lit ridges and deep
+// evergreen pines: dark enough to stand out from the slate ground (a mid
+// green sits at the ground's own brightness and vanishes), and far too
+// dark for the shader to take for a Christmas bulb.
 const STYLE = `
 text { font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "DejaVu Sans Mono", monospace; font-size: ${FONT_SIZE}px; white-space: pre; }
 .aurora { font-weight: 700; }
@@ -317,6 +339,7 @@ text { font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "DejaVu Sa
 .peaks { fill: #8ccfc0; }
 .near { fill: #2a5148; }
 .trees { fill: #255446; }
+.snowcaps { fill: #b9ccd6; }
 .bulbs { font-weight: 700; }
 .snow { fill: #1a2d33; }
 .sky { fill: url(#sky); }
@@ -337,13 +360,14 @@ text { font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "DejaVu Sa
   .far { fill: #dfe5f7; }
   .peaks { fill: #ffffff; }
   .near { fill: #c9cfee; }
-  .trees { fill: #232a52; }
+  .trees { fill: #0f2a1a; }
+  .snowcaps { fill: #f4f7ff; }
   .snow { fill: #aab1dc; }
 }
 `
 
-export function auroraScene({ festive = false } = {}) {
-  const pines = forest(festive)
+export function auroraScene({ festive = false, snowy = false } = {}) {
+  const pines = forest(festive, snowy)
   const main = drawCurtain(bands.main, 0.16)
   const mainAlt = drawCurtain(bands.main, 0.22, 101)
   const high = drawCurtain(bands.high, 0.14)
@@ -426,6 +450,7 @@ export function auroraScene({ festive = false } = {}) {
     `<path class="nearGround" d="${ridgeFill(near)}"/>`,
     `<g class="near">${rows(ridgeGrid(near))}</g>`,
     `<g class="trees">${rows(pines.grid)}</g>`,
+    `<g class="snowcaps">${rows(pines.caps)}</g>`,
     `<g class="bulbs">${pines.lights}</g>`,
     `<g class="snow">${rows(snow())}</g>`,
     '</svg>',
