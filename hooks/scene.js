@@ -223,9 +223,17 @@ function ridgeFill(r) {
   return `${d}L${W} ${H}L0 ${H}Z`
 }
 
-function forest() {
+// The pines along the near ridge. With `festive`, a few of them are hung
+// with coloured lights, a gold star on top, which the shader twinkles.
+// The bulbs are bright and strongly coloured, unlike anything else under
+// the ridge line, which is how the shader finds them.
+const BULBS = ['#ff4d5e', '#ffd34d', '#4da6ff', '#ff7ad9', '#7dff6a']
+const STAR = '#ffd34d'
+
+function forest(festive) {
   const grid = blankGrid()
   const random = mulberry32(909)
+  const trees = []
   let c = 2
   while (c < COLS - 3) {
     const clump = noise(c / 11, 90)
@@ -243,13 +251,34 @@ function forest() {
             grid[row][col] = x === -k ? '/' : x === k ? '\\' : '^'
           }
         }
+        trees.push({ c, trunk, tiers })
         c += tiers + 1 + Math.floor(random() * 3)
         continue
       }
     }
     c += 1 + Math.floor(random() * 3)
   }
-  return grid
+
+  let lights = ''
+  if (festive) {
+    const pick = mulberry32(2512)
+    const bulb = (row, col, glyph, colour) => {
+      grid[row][col] = ' '
+      lights += `<text x="${col * CW + CW / 2}" y="${baseline(row)}" text-anchor="middle" fill="${colour}">${glyph}</text>`
+    }
+    // About one tree in three, the taller ones more often.
+    for (const { c: centre, trunk, tiers } of trees) {
+      if (pick() > (tiers >= 3 ? 0.5 : 0.25)) continue
+      const top = trunk - tiers - 1
+      bulb(top, centre, '*', STAR)
+      for (let k = 1; k <= tiers; k++) {
+        for (let x = -k + 1; x <= k - 1; x++) {
+          if (pick() < 0.45) bulb(top + k, centre + x, 'o', BULBS[Math.floor(pick() * BULBS.length)])
+        }
+      }
+    }
+  }
+  return { grid, lights }
 }
 
 function snow() {
@@ -282,10 +311,12 @@ text { font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "DejaVu Sa
 .peaks { fill: #8ccfc0; }
 .near { fill: #2a5148; }
 .trees { fill: #255446; }
+.bulbs { font-weight: 700; }
 .snow { fill: #1a2d33; }
 `
 
-export function auroraScene() {
+export function auroraScene({ festive = false } = {}) {
+  const pines = forest(festive)
   const main = drawCurtain(bands.main, 0.16)
   const mainAlt = drawCurtain(bands.main, 0.22, 101)
   const high = drawCurtain(bands.high, 0.14)
@@ -346,7 +377,8 @@ export function auroraScene() {
     `<g class="peaks">${rows(ridgeGrid(far, 6))}</g>`,
     `<path d="${ridgeFill(near)}" fill="#02060a"/>`,
     `<g class="near">${rows(ridgeGrid(near))}</g>`,
-    `<g class="trees">${rows(forest())}</g>`,
+    `<g class="trees">${rows(pines.grid)}</g>`,
+    `<g class="bulbs">${pines.lights}</g>`,
     `<g class="snow">${rows(snow())}</g>`,
     '</svg>',
   ].join('')

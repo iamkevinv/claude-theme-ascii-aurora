@@ -46,6 +46,9 @@ Once installed it loads in every new session, desktop app included.
   The stars stay put and twinkle, the light breathes and shimmers, and a
   band of light travels along the curtains. With reduced motion turned on,
   or on the mobile app, the still sky shows.
+- **Christmas.** On 24 and 25 December, by your computer's own calendar, a
+  few of the pines are hung with coloured lights and a gold star, each bulb
+  glowing up and down on its own. They go up and come down around midnight.
 - **Colours.** Dark only: near-black navy surfaces and icy mint text. Code
   uses the aurora's colours: teal keywords, green strings, violet literals,
   magenta names, gold variables.

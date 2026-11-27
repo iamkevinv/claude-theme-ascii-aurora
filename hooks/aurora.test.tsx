@@ -150,3 +150,44 @@ test('another scene is left alone', async $ => {
   expect(await ui.find({ type: 'Svg' })).toBeUndefined()
   await ui.unmount()
 })
+
+// Whether the sky drawn has any Christmas lights hung in it.
+async function hasLights(ui: { find: (query: { type: string }) => Promise<{ props: Record<string, unknown> } | undefined> }) {
+  const sky = await ui.find({ type: 'Svg' })
+
+  return String(sky?.props.source ?? '').includes('<g class="bulbs"><text')
+}
+
+for (const [day, name] of [[24, 'Christmas Eve'], [25, 'Christmas Day']] as const) {
+  test(`on ${name} a few pines have lights`, async ($, on) => {
+    mock.clock(on, { now: new Date(2026, 11, day, 9, 30).getTime() })
+    world(on)
+    await $.session.start(START)
+
+    const ui = await $.ui.mount({ ...BACKDROP, surface: 'desktop' })
+    expect(await hasLights(ui)).toBe(true)
+    await ui.unmount()
+  })
+}
+
+test('on other days the pines are plain', async ($, on) => {
+  mock.clock(on, { now: new Date(2026, 11, 26, 9, 30).getTime() })
+  world(on)
+  await $.session.start(START)
+
+  const ui = await $.ui.mount({ ...BACKDROP, surface: 'desktop' })
+  expect(await hasLights(ui)).toBe(false)
+  await ui.unmount()
+})
+
+test('the lights go up around midnight on Christmas Eve', async ($, on) => {
+  const clock = mock.clock(on, { now: new Date(2026, 11, 23, 23, 55).getTime() })
+  world(on)
+  await $.session.start(START)
+
+  const ui = await $.ui.mount({ ...BACKDROP, surface: 'desktop' })
+  expect(await hasLights(ui)).toBe(false)
+  await clock.advance(20 * 60 * 1000)
+  expect(await hasLights(ui)).toBe(true)
+  await ui.unmount()
+})
